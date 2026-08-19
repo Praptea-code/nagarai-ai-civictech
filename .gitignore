@@ -1,0 +1,10 @@
+.env
+.env.local
+__pycache__/
+node_modules/
+.venv/
+logs/
+*.pyc
+.next/
+out/
+*.tsbuildinfo

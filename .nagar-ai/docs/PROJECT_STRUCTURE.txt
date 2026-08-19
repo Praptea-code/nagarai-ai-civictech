@@ -1,0 +1,61 @@
+nagar-ai/
+├── backend/                       # FastAPI backend
+│   ├── app/
+│   │   ├── main.py                # entry point, configure logging & routers
+│   │   ├── core/
+│   │   │   ├── config.py          # load env vars (pydantic-settings)
+│   │   │   └── logging.py         # logging setup (shared)
+│   │   ├── routers/
+│   │   │   ├── citizen.py         # **only Person 1 touches this**
+│   │   │   └── admin.py           # **only Person 2 touches this** (stub for now)
+│   │   ├── services/
+│   │   │   ├── nlp.py             # Person 1: classify text
+│   │   │   ├── cv.py              # Person 1: detect image
+│   │   │   ├── embeddings.py      # Person 1: generate + find duplicates
+│   │   │   ├── storage.py         # Person 1: upload to Supabase Storage
+│   │   │   └── db.py              # shared DB helpers (both may read, but Person 1 writes initial version)
+│   │   ├── models/                # Pydantic schemas (shared, but contract is fixed)
+│   │   │   ├── complaint.py
+│   │   │   └── ...
+│   │   └── utils/                 # helpers (e.g., file validation)
+│   ├── requirements.txt
+│   ├── .env                       # backend secrets (never commit)
+│   └── pyproject.toml             # optional
+├── apps/
+│   ├── citizen/                   # **Person 1 owns entire directory**
+│   │   ├── app/                   # Next.js App Router
+│   │   │   ├── page.tsx           # landing (or redirect to /submit)
+│   │   │   ├── submit/
+│   │   │   │   └── page.tsx       # complaint form
+│   │   │   ├── my-complaints/
+│   │   │   │   ├── page.tsx       # list
+│   │   │   │   └── [id]/
+│   │   │   │       └── page.tsx   # detail view
+│   │   │   ├── auth/
+│   │   │   │   ├── signup/
+│   │   │   │   ├── login/
+│   │   │   │   └── logout/        # route handler
+│   │   │   └── api/               # optional API routes (e.g., for server actions)
+│   │   ├── components/            # reusable UI (form, status badge, etc.)
+│   │   ├── lib/
+│   │   │   ├── supabase.ts        # Supabase client
+│   │   │   ├── api.ts             # fetch helpers for your backend
+│   │   │   ├── auth.ts            # wrappers around supabase.auth
+│   │   │   └── logger.ts          # frontend logging
+│   │   ├── public/
+│   │   ├── .env.local             # frontend env (never commit)
+│   │   ├── package.json
+│   │   └── tsconfig.json
+│   └── admin/                     # **Person 2 owns this – you never touch it**
+├── docs/                          # all documentation (both persons edit, but rarely conflict)
+│   ├── API_CONTRACT.md
+│   ├── ARCHITECTURE_CITIZEN_FLOW.md
+│   ├── DECISION_LOG.md
+│   ├── ENVIRONMENT_SETUP.md
+│   ├── GIT_WORKFLOW.md
+│   ├── LOGGING.md
+│   ├── TASKS_PERSON1_CITIZEN.md
+│   └── nagar_ai_schema.sql        # moved here for versioning
+├── scripts/                       # dev scripts (e.g., seed, test)
+├── .gitignore
+└── README.md
