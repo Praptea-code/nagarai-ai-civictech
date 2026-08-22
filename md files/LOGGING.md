@@ -11,7 +11,8 @@ import logging
 import sys
 
 def setup_logging(level: str = "INFO") -> logging.Logger:
-    logger = logging.getLogger("nagar_ai")
+    """Configure the root logger so every __name__ logger emits records."""
+    logger = logging.getLogger()  # root: ancestor of every __name__ logger
     logger.setLevel(getattr(logging, level.upper(), logging.INFO))
 
     handler = logging.StreamHandler(sys.stdout)
@@ -20,10 +21,11 @@ def setup_logging(level: str = "INFO") -> logging.Logger:
 
     return logger
 ```
-Call `setup_logging(settings.LOG_LEVEL)` once, in `app/main.py`, at startup. All
-service/router loggers are children of `nagar_ai`, so they inherit the level and
-handler through propagation. If nothing calls `setup_logging()`, Python's last-resort
-handler silently drops every INFO record - wiring it in is mandatory, not optional.
+Call `setup_logging(settings.LOG_LEVEL)` once, in `app/main.py`, at startup. Services and
+routers log via `logging.getLogger(__name__)`, so the handler must sit on the **root**
+logger — attaching it to any other named branch would silently receive nothing from them.
+If nothing calls `setup_logging()`, Python's last-resort handler drops every INFO record
+— wiring it in is mandatory, not optional.
 
 ## Pattern every function follows
 ```python
