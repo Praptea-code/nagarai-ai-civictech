@@ -49,9 +49,9 @@ export default function NavBar() {
     pathname === href || pathname?.startsWith(`${href}/`) === true;
 
   return (
-    <header className="border-b border-gray-200 bg-white">
-      <nav className="mx-auto flex max-w-4xl flex-wrap items-center justify-between gap-x-6 gap-y-2 px-4 py-3">
-        <Link href="/" className="text-lg font-bold text-gray-900">
+    <header className="bg-signal text-paper">
+      <nav className="mx-auto flex max-w-3xl flex-wrap items-center justify-between gap-x-6 gap-y-2 px-4 py-3">
+        <Link href="/" className="font-display text-lg font-bold text-white transition-colors duration-150 hover:text-paper/90">
           Nagar AI
         </Link>
 
@@ -60,12 +60,12 @@ export default function NavBar() {
             <Link
               key={link.href}
               href={link.href}
-              className={
-                isActive(link.href)
-                  ? "rounded bg-blue-50 px-2 py-1 text-sm font-medium text-blue-700"
-                  : "px-2 py-1 text-sm text-gray-600 hover:text-gray-900"
-              }
               aria-current={isActive(link.href) ? "page" : undefined}
+              className={`text-sm transition-colors duration-150 ${
+                isActive(link.href)
+                  ? "font-medium text-white underline decoration-hazard decoration-2 underline-offset-[6px]"
+                  : "text-paper/80 hover:text-white"
+              }`}
             >
               {link.label}
             </Link>
@@ -78,18 +78,18 @@ export default function NavBar() {
               type="button"
               onClick={handleLogout}
               disabled={loggingOut}
-              className="rounded border border-gray-300 px-2 py-1 text-sm text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+              className="rounded-sm border border-paper/50 px-2 py-1 text-sm text-paper transition-colors duration-150 hover:bg-white/10 disabled:opacity-50"
             >
               {loggingOut ? "Logging out..." : "Log out"}
             </button>
           ) : (
             <>
-              <Link href="/auth/login" className="px-2 py-1 text-sm text-gray-600 hover:text-gray-900">
+              <Link href="/auth/login" className="px-1 py-1 text-sm text-paper/80 transition-colors duration-150 hover:text-white">
                 Log in
               </Link>
               <Link
                 href="/auth/signup"
-                className="rounded border border-gray-300 px-2 py-1 text-sm text-gray-700 hover:bg-gray-50"
+                className="rounded-sm border border-paper/50 px-2 py-1 text-sm text-paper transition-colors duration-150 hover:bg-white/10"
               >
                 Sign up
               </Link>
