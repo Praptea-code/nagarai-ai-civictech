@@ -186,3 +186,22 @@ contradicts the citizen-supplied-category decision).
 **Impact:** `severity: string | null` in the 201 response (contract already types it
 nullable); complaints table already allows null severity; no client change needed - the
 tracker UI never renders severity.
+
+### 2026-08-22 - CONTRACT CHANGE: single image -> multiple images (max 5)
+**Decision:** POST /api/v1/complaints accepts an optional `images` multipart file
+array (jpeg/png only, max 8MB each, max 5 files) instead of a single `image` file.
+The 201 response and GET /complaints/{id} now return `image_urls: string[]` instead
+of `image_url: string`. Empty array when no photos were submitted.
+**Person 2 action required:** the admin dashboard must switch from reading
+`image_url` (string) to `image_urls` (string array) wherever it displays complaint
+evidence. Any complaint created after this change will NOT have the old field, and
+the new field is always an array - render every entry or take image_urls[0].
+**Context:** Citizens often attach several angles of the same pothole/leak; forcing
+one photo loses evidence. The complaint_images table was already one-row-per-photo,
+so this aligns the API with the schema. Max count (5) and per-file size (8MB) are
+assumptions pending review, not values from any existing doc. A failed file rejects
+the whole request with 422 rather than silently dropping it.
+**Impact:** `backend/app/models/complaint.py`, `backend/app/services/storage.py`
+(per-object slot suffix), `backend/app/services/db.py`, `backend/app/routers/citizen.py`,
+`apps/citizen/lib/api.ts`, submit form, tracker detail page. Old complaints keep their
+single row and are served as a one-element array.

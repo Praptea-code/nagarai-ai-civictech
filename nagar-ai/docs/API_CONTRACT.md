@@ -19,7 +19,7 @@ Request (`multipart/form-data`):
 | longitude | float | yes |
 | ward | string | no |
 | municipality | string | no |
-| image | file (jpeg/png, max 8MB) | no |
+| images | file array (jpeg/png only, max 8MB each, max 5 files) | no |
 
 Response `201`:
 ```json
@@ -31,7 +31,7 @@ Response `201`:
   "ai_summary": "Large pothole near college gate causing safety risks",
   "ai_confidence": 0.94,
   "duplicate_of_complaint_id": null,
-  "image_url": "https://.../complaint_1823.jpg",
+  "image_urls": ["https://.../complaint_1823.jpg", "https://.../complaint_1824.jpg"],
   "created_at": "2026-08-18T10:03:00Z"
 }
 ```
@@ -40,7 +40,9 @@ not AI-generated and no model runs on the uploaded photo (the photo is stored as
 evidence only). `ai_summary` and `ai_confidence` still come from NLP on the description
 text.
 Response `422`: FastAPI's default Pydantic validation error shape (missing description,
-invalid lat/lng, etc).
+invalid lat/lng, etc), or a plain `{ "detail": "..." }` body when a submitted image
+fails a check that multipart parsing can't express (wrong MIME type, over 8MB, more
+than 5 files) — the whole request is rejected, no files are silently dropped.
 
 ## GET /complaints/mine
 Returns complaints for the authenticated citizen.
@@ -79,7 +81,7 @@ Response `200`:
     { "status": "submitted", "created_at": "..." },
     { "status": "assigned", "created_at": "..." }
   ],
-  "image_url": "...",
+  "image_urls": ["https://.../complaint_1823.jpg"],
   "duplicate_of_complaint_id": null
 }
 ```
