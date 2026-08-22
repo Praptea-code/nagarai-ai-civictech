@@ -64,20 +64,32 @@ export default function ComplaintDetailPage() {
               <span className={`rounded-full px-2 py-0.5 text-xs ${statusBadgeClass(complaint.status)}`}>
                 {complaint.status.replace("_", " ")}
               </span>
-              {complaint.image_url && (
-                <a
-                  href={complaint.image_url}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-xs text-blue-600 hover:underline"
-                >
-                  View photo
-                </a>
-              )}
             </div>
 
             <h1 className="mt-2 text-lg font-semibold">Complaint details</h1>
             <p className="mt-2 whitespace-pre-line text-sm text-gray-700">{complaint.description}</p>
+
+            {complaint.image_urls.length > 0 && (
+              <section className="mt-4">
+                <h2 className="text-xs font-bold uppercase tracking-wide text-gray-500">
+                  Photos ({complaint.image_urls.length})
+                </h2>
+                <ul className="mt-2 grid grid-cols-3 gap-2">
+                  {complaint.image_urls.map((url, index) => (
+                    <li key={url}>
+                      <a href={url} target="_blank" rel="noreferrer" title={`Open photo ${index + 1} full size`}>
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={url}
+                          alt={`Complaint photo ${index + 1}`}
+                          className="h-24 w-full rounded border border-gray-200 object-cover"
+                        />
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
           </div>
 
           <section className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">

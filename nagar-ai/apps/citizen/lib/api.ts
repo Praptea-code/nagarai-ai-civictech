@@ -46,7 +46,7 @@ export interface ComplaintDetail {
   description: string;
   status: string;
   status_history: StatusHistoryEntry[];
-  image_url: string | null;
+  image_urls: string[];
   duplicate_of_complaint_id: string | null;
 }
 
