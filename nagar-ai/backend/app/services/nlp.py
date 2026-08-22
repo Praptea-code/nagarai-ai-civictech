@@ -1,5 +1,6 @@
 """NLP service — complaint severity classification and summarization."""
 
+import asyncio
 import logging
 import re
 
@@ -42,7 +43,7 @@ async def classify_complaint_text(text: str) -> dict:
     """
     logger.info("classify_complaint_text called | text_len=%d", len(text))
     try:
-        result = _get_classifier()(text, candidate_labels=SEVERITY_LABELS)
+        result = await asyncio.to_thread(_get_classifier(), text, candidate_labels=SEVERITY_LABELS)
         severity = result["labels"][0]
         confidence = float(result["scores"][0])
         summary = _extract_summary(text)

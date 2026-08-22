@@ -103,3 +103,36 @@ cosine in Python (rejected â€” defeats pgvector/indexing, won't scale).
 **Impact:** `backend/app/services/embeddings.py`, `backend/requirements.txt`
 (sentence-transformers added), `nagar_ai_schema.sql` (+1 function â€” must be applied to
 the live Supabase project before dedup works end to end).
+
+### 2026-08-22 — JWT validation delegated to Supabase Auth (GoTrue), not local decode
+**Decision:** `require_citizen()` in the citizen router validates the
+`Authorization: Bearer` token by calling `supabase.auth.get_user(token)` (offloaded to a
+worker thread). Missing/malformed header and invalid/expired tokens both yield 401 with
+`WWW-Authenticate: Bearer`; ownership failures later yield 403 per the contract.
+**Context:** supabase-py has no offline verify helper, and local PyJWT verification would
+need either the shared HS256 secret or JWKS support — neither available in `.env`.
+GoTrue already performs authoritative signature, expiry and revocation checks.
+**Alternatives considered:** Local PyJWT + JWT secret env var (rejected — new secret to
+distribute/rotate, duplicates GoTrue logic); decoding without verification (rejected —
+insecure).
+**Impact:** `backend/app/routers/citizen.py`. One extra HTTP round trip per request
+(~100-200ms); acceptable at current scale.
+
+### 2026-08-22 — RLS-scoped reads via anon-key client; service-role only for trusted writes
+**Decision:** List/get queries run through a fresh per-request client built from
+`SUPABASE_ANON_KEY` with the citizen's JWT set via `postgrest.auth()`, so Postgres RLS
+actually scopes rows. Writes in the submission pipeline (`save_complaint`) use the
+service-role client. In `get_complaint`, when the RLS-scoped fetch misses, one existence
+probe under the trusted client distinguishes 403 (exists but foreign) from 404.
+**Context:** The status-history insert policy is admin-only by schema, so a citizen-JWT
+write path can never persist the initial history row — the backend is therefore the
+trusted write boundary and takes `citizen_id` exclusively from the verified JWT, never
+from form data. A fresh client per request is required because supabase-py's
+`postgrest.auth()` mutates shared header state and is unsafe across concurrent requests.
+**Alternatives considered:** Service-role reads with manual citizen_id filtering
+(rejected for list/get — task requires RLS to genuinely apply); changing RLS so citizens
+may insert history rows (rejected — weakens admin-only audit trail invariant).
+**Impact:** `backend/app/core/config.py` (+SUPABASE_ANON_KEY), backend `.env` (anon key
+added locally), `backend/app/services/db.py` (citizen_client factory),
+`backend/app/routers/citizen.py`. Existence probe reveals whether a complaint id exists
+to non-owners; ids are UUIDs (unguessable) so this leaks nothing practical.
