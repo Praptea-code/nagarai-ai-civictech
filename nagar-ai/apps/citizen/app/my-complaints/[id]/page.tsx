@@ -4,8 +4,8 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
+import StatusBadge from "@/components/StatusBadge";
 import { fetchComplaint, ComplaintDetail } from "@/lib/api";
-import { statusBadgeClass } from "@/lib/categories";
 import { log } from "@/lib/logger";
 
 function formatTimestamp(iso: string): string {
@@ -61,9 +61,7 @@ export default function ComplaintDetailPage() {
 
           <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
             <div className="flex items-center justify-between gap-2">
-              <span className={`rounded-full px-2 py-0.5 text-xs ${statusBadgeClass(complaint.status)}`}>
-                {complaint.status.replace("_", " ")}
-              </span>
+              <StatusBadge status={complaint.status} />
             </div>
 
             <h1 className="mt-2 text-lg font-semibold">Complaint details</h1>
@@ -103,8 +101,11 @@ export default function ComplaintDetailPage() {
                   {idx < complaint.status_history.length - 1 && (
                     <span className="absolute left-[4.5px] top-4 h-full w-px bg-gray-300" aria-hidden />
                   )}
-                  <p className="text-sm font-medium">{entry.status.replace("_", " ")}</p>
-                  <p className="text-xs text-gray-500">{formatTimestamp(entry.created_at)}</p>
+                  <StatusBadge
+                    status={entry.status}
+                    className={idx === complaint.status_history.length - 1 ? "" : "opacity-70"}
+                  />
+                  <p className="mt-1 text-xs text-ink/60">{formatTimestamp(entry.created_at)}</p>
                 </li>
               ))}
             </ol>

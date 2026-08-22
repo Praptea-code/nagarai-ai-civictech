@@ -3,8 +3,9 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
+import StatusBadge from "@/components/StatusBadge";
 import { fetchMyComplaints, ComplaintListItem } from "@/lib/api";
-import { CATEGORY_LABELS, statusBadgeClass } from "@/lib/categories";
+import { CATEGORY_LABELS } from "@/lib/categories";
 import { log } from "@/lib/logger";
 
 function formatDate(iso: string): string {
@@ -57,9 +58,7 @@ export default function MyComplaintsPage() {
             >
               <div className="flex items-center justify-between gap-2">
                 <span className="font-medium">{CATEGORY_LABELS[item.category] ?? item.category}</span>
-                <span className={`rounded-full px-2 py-0.5 text-xs ${statusBadgeClass(item.status)}`}>
-                  {item.status.replace("_", " ")}
-                </span>
+                <StatusBadge status={item.status} />
               </div>
               <p className="mt-1 line-clamp-2 text-sm text-gray-600">{item.description}</p>
               <div className="mt-2 flex items-center gap-2 text-xs text-gray-500">
