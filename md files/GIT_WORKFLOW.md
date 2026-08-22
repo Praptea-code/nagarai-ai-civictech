@@ -3,27 +3,27 @@
 These rules are absolute. If anything elsewhere conflicts with this file, this file wins.
 
 ## Your branch
-You work in exactly one branch: `feature/citizen-flow`.
+You work in exactly one branch: `feature-citizen`.
 
 - Never run `git checkout main`, `git checkout feature/admin-flow`, or switch to any
   other branch to make edits.
-- If `feature/citizen-flow` doesn't exist yet, create it from `main`:
+- If `feature-citizen` doesn't exist yet, create it from `main`:
   ```bash
   git checkout main
   git pull origin main
-  git checkout -b feature/citizen-flow
-  git push -u origin feature/citizen-flow
+  git checkout -b feature-citizen
+  git push -u origin feature-citizen
   ```
 - Confirm your branch before every change: `git branch --show-current` must print
-  `feature/citizen-flow`. If it doesn't, stop and fix it before editing anything.
+  `feature-citizen`. If it doesn't, stop and fix it before editing anything.
 
 ## Start of every session
 ```bash
 git status                        # working tree must be clean; if not, stop and report why
-git checkout feature/citizen-flow
+git checkout feature-citizen
 git fetch origin
 git merge origin/main --no-edit               # pull in shared schema/contract updates
-git merge origin/feature/citizen-flow --no-edit  # pick up any teammate/human commits
+git merge origin/feature-citizen --no-edit  # pick up any teammate/human commits
 ```
 Never use `git pull --rebase` and never `git rebase` a branch that has already been
 pushed. Rebase rewrites history — with two people working in parallel, that causes silent
@@ -65,17 +65,17 @@ Never use vague messages like `update`, `fix stuff`, `wip`, `changes`.
 ```bash
 git add <specific files — never `git add .` blindly>
 git commit -m "<type>(<scope>): <summary>"
-git push origin feature/citizen-flow
+git push origin feature-citizen
 ```
 - Push after every 1–3 commits, not just at the end of the day — it's your backup and
   lets Person 2 and the human see progress.
 - Never `git push --force` or `--force-with-lease`, on any branch, ever. If a push is
-  rejected (non-fast-forward), someone else pushed to `feature/citizen-flow` first —
+  rejected (non-fast-forward), someone else pushed to `feature-citizen` first —
   merge, don't force:
   ```bash
   git fetch origin
-  git merge origin/feature/citizen-flow --no-edit
-  git push origin feature/citizen-flow
+  git merge origin/feature-citizen --no-edit
+  git push origin feature-citizen
   ```
 - Never push to `main`. Merging into `main` happens through a pull request that a human
   (or Person 2, reviewing) merges — you open the PR, you don't merge it.
