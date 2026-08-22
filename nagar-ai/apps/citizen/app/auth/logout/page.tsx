@@ -19,7 +19,7 @@ export default function LogoutPage() {
   }, [router]);
 
   return (
-    <main className="mx-auto max-w-md p-6 text-center text-gray-600">
+    <main className="mx-auto max-w-md p-6 text-center text-ink/60">
       {done ? "Redirecting..." : "Logging out..."}
     </main>
   );

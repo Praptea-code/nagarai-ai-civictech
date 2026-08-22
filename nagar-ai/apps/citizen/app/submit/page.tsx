@@ -145,15 +145,15 @@ export default function SubmitPage() {
   }
 
   const inputClass =
-    "mt-1 w-full rounded border border-gray-300 p-2 focus:border-blue-500 focus:outline-none";
+    "mt-1 w-full rounded border border-rule bg-white p-2 focus:border-signal focus:outline-none focus:ring-1 focus:ring-signal";
 
   return (
-    <main className="mx-auto max-w-lg space-y-4 p-4">
-      <h1 className="text-xl font-bold">Report an issue</h1>
+    <main className="mx-auto w-full max-w-2xl space-y-6">
+      <h1 className="font-display text-xl font-bold text-ink">Report an issue</h1>
 
-      <form onSubmit={handleSubmit} className="space-y-4 rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+      <form onSubmit={handleSubmit} className="w-full space-y-4 rounded-md border border-rule bg-white p-6 shadow-sm">
         <label className="block text-sm font-medium">
-          Description <span className="text-red-500">*</span>
+          Description <span className="text-hazard">*</span>
           <textarea
             required
             rows={4}
@@ -166,7 +166,7 @@ export default function SubmitPage() {
         </label>
 
         <label className="block text-sm font-medium">
-          Category <span className="text-red-500">*</span>
+          Category <span className="text-hazard">*</span>
           <select
             required
             value={category}
@@ -186,12 +186,11 @@ export default function SubmitPage() {
 
         <fieldset>
           <legend className="text-sm font-medium">
-            Location <span className="text-red-500">*</span>
+            Location <span className="text-hazard">*</span>
           </legend>
-          <p className="mt-1 text-xs text-gray-500">{geoStatus ?? "Requesting your location..."}</p>
+          <p className="mt-1 text-xs text-ink/60">{geoStatus ?? "Requesting your location..."}</p>
           <div className="mt-2 grid grid-cols-2 gap-2">
-            <label className="text-xs text-gray-600">
-              Latitude
+            <label className="text-xs text-ink/70">`n              Latitude
               <input
                 type="number"
                 step="any"
@@ -199,11 +198,11 @@ export default function SubmitPage() {
                 value={latitude}
                 onChange={(e) => setLatitude(e.target.value)}
                 placeholder="27.7172"
-                className={`mt-1 w-full rounded border p-2 ${geoStatus?.startsWith("Location captured") ? "bg-gray-100" : "border-gray-300"}`}
+                className={`mt-1 w-full rounded border bg-white p-2 font-mono text-sm ${geoStatus?.startsWith("Location captured") ? "border-rule bg-paper" : "border-rule"} focus:border-signal focus:outline-none focus:ring-1 focus:ring-signal`}
                 readOnly={geoStatus?.startsWith("Location captured")}
               />
             </label>
-            <label className="text-xs text-gray-600">
+            <label className="text-xs text-ink/70">
               Longitude
               <input
                 type="number"
@@ -212,7 +211,7 @@ export default function SubmitPage() {
                 value={longitude}
                 onChange={(e) => setLongitude(e.target.value)}
                 placeholder="85.3240"
-                className={`mt-1 w-full rounded border p-2 ${geoStatus?.startsWith("Location captured") ? "bg-gray-100" : "border-gray-300"}`}
+                className={`mt-1 w-full rounded border bg-white p-2 font-mono text-sm ${geoStatus?.startsWith("Location captured") ? "border-rule bg-paper" : "border-rule"} focus:border-signal focus:outline-none focus:ring-1 focus:ring-signal`}
                 readOnly={geoStatus?.startsWith("Location captured")}
               />
             </label>
@@ -248,7 +247,7 @@ export default function SubmitPage() {
           </legend>
           <div className="mt-1 grid grid-cols-2 gap-2">
             <label className="block text-sm">
-              <span className="text-gray-600">Choose from gallery</span>
+              <span className="text-ink/70">Choose from gallery</span>
               <input
                 type="file"
                 accept="image/jpeg,image/png"
@@ -257,11 +256,11 @@ export default function SubmitPage() {
                   addFiles(e.target.files);
                   e.target.value = "";
                 }}
-                className="mt-1 block w-full text-sm text-gray-600 file:mr-3 file:rounded file:border-0 file:bg-blue-50 file:p-2 file:text-sm file:text-blue-700"
+                className="mt-1 block w-full text-sm text-ink/70 file:mr-3 file:rounded file:border-0 file:bg-signal/10 file:p-2 file:text-sm file:text-signal"
               />
             </label>
             <label className="block text-sm">
-              <span className="text-gray-600">Take photo</span>
+              <span className="text-ink/70">Take photo</span>
               {/* capture="environment" opens the rear camera directly on mobile;
                   each capture appends to the same list, so users can tap it repeatedly. */}
               <input
@@ -272,7 +271,7 @@ export default function SubmitPage() {
                   addFiles(e.target.files);
                   e.target.value = "";
                 }}
-                className="mt-1 block w-full text-sm text-gray-600 file:mr-3 file:rounded file:border-0 file:bg-green-50 file:p-2 file:text-sm file:text-green-700"
+                className="mt-1 block w-full text-sm text-ink/70 file:mr-3 file:rounded file:border-0 file:bg-moss/10 file:p-2 file:text-sm file:text-moss"
               />
             </label>
           </div>
@@ -285,7 +284,7 @@ export default function SubmitPage() {
                   <img
                     src={preview.url}
                     alt={`Photo ${index + 1}`}
-                    className="h-20 w-20 rounded border border-gray-300 object-cover"
+                    className="h-20 w-20 rounded border border-rule object-cover"
                   />
                   <button
                     type="button"
@@ -316,7 +315,7 @@ export default function SubmitPage() {
         <button
           type="submit"
           disabled={submitting}
-          className="w-full rounded bg-blue-600 p-2 font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+          className="w-full rounded bg-signal p-2 font-medium text-white transition-colors duration-150 hover:bg-signal-dark disabled:opacity-50"
         >
           {submitting ? "Submitting..." : "Submit report"}
         </button>

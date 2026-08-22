@@ -39,12 +39,12 @@ export default function SignupPage() {
   }
 
   return (
-    <main className="mx-auto flex min-h-screen max-w-md items-center px-4">
+    <main className="flex min-h-[70vh] items-center justify-center">
       <form
         onSubmit={handleSubmit}
-        className="w-full space-y-4 rounded-lg border border-gray-200 bg-white p-6 shadow-sm"
+        className="w-full max-w-sm space-y-4 rounded-md border border-rule bg-white p-8 shadow-sm"
       >
-        <h1 className="text-xl font-bold">Create your account</h1>
+        <h1 className="font-display text-xl font-bold">Create your account</h1>
 
         <label className="block text-sm font-medium">
           Full name
@@ -52,7 +52,7 @@ export default function SignupPage() {
             type="text"
             value={fullName}
             onChange={(e) => setFullName(e.target.value)}
-            className="mt-1 w-full rounded border border-gray-300 p-2"
+            className="mt-1 w-full rounded border border-rule bg-white p-2 focus:border-signal focus:outline-none focus:ring-1 focus:ring-signal"
           />
         </label>
 
@@ -63,7 +63,7 @@ export default function SignupPage() {
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="mt-1 w-full rounded border border-gray-300 p-2"
+            className="mt-1 w-full rounded border border-rule bg-white p-2 focus:border-signal focus:outline-none focus:ring-1 focus:ring-signal"
           />
         </label>
 
@@ -75,7 +75,7 @@ export default function SignupPage() {
             minLength={6}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="mt-1 w-full rounded border border-gray-300 p-2"
+            className="mt-1 w-full rounded border border-rule bg-white p-2 focus:border-signal focus:outline-none focus:ring-1 focus:ring-signal"
           />
         </label>
 
@@ -88,14 +88,14 @@ export default function SignupPage() {
         <button
           type="submit"
           disabled={busy}
-          className="w-full rounded bg-blue-600 p-2 font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+          className="w-full rounded bg-signal p-2 font-medium text-white transition-colors duration-150 hover:bg-signal-dark disabled:opacity-50"
         >
           {busy ? "Signing up..." : "Sign up"}
         </button>
 
         <p className="text-sm text-gray-600">
           Already have an account?{" "}
-          <a href="/auth/login" className="text-blue-600 hover:underline">
+          <a href="/auth/login" className="text-signal hover:underline">
             Log in
           </a>
         </p>

@@ -29,8 +29,8 @@ export default function MyComplaintsPage() {
   }, []);
 
   return (
-    <main className="mx-auto max-w-lg space-y-4 p-4">
-      <h1 className="text-xl font-bold">My reports</h1>
+    <main className="space-y-5">
+      <h1 className="font-display text-xl font-bold">My reports</h1>
 
       {error && (
         <p role="alert" className="rounded bg-red-50 p-2 text-sm text-red-600">
@@ -38,12 +38,12 @@ export default function MyComplaintsPage() {
         </p>
       )}
 
-      {!items && !error && <p className="text-gray-500">Loading...</p>}
+      {!items && !error && <p className="text-ink/60">Loading...</p>}
 
       {items && items.length === 0 && (
-        <div className="rounded-lg border border-dashed border-gray-300 p-6 text-center text-gray-500">
+        <div className="rounded-md border border-dashed border-rule p-6 text-center text-ink/60">
           <p>You haven&apos;t reported anything yet.</p>
-          <Link href="/submit" className="mt-2 inline-block text-blue-600 hover:underline">
+          <Link href="/submit" className="mt-2 inline-block text-signal hover:underline">
             Report an issue
           </Link>
         </div>
@@ -54,16 +54,16 @@ export default function MyComplaintsPage() {
           <li key={item.id}>
             <Link
               href={`/my-complaints/${item.id}`}
-              className="block rounded-lg border border-gray-200 bg-white p-4 shadow-sm hover:border-blue-400"
+              className="block rounded-md border border-rule bg-white p-4 shadow-sm transition-colors duration-150 hover:border-signal"
             >
               <div className="flex items-center justify-between gap-2">
                 <span className="font-medium">{CATEGORY_LABELS[item.category] ?? item.category}</span>
                 <StatusBadge status={item.status} />
               </div>
-              <p className="mt-1 line-clamp-2 text-sm text-gray-600">{item.description}</p>
-              <div className="mt-2 flex items-center gap-2 text-xs text-gray-500">
+              <p className="mt-1 line-clamp-2 text-sm text-ink/70">{item.description}</p>
+              <div className="mt-2 flex items-center gap-2 text-xs text-ink/60">
                 {item.severity && (
-                  <span className="rounded bg-gray-50 px-1.5 py-0.5">Severity: {item.severity}</span>
+                  <span className="rounded-sm bg-paper px-1.5 py-0.5 font-mono">Severity: {item.severity}</span>
                 )}
                 {item.department && <span>{item.department}</span>}
                 <span>{formatDate(item.created_at)}</span>
@@ -76,7 +76,7 @@ export default function MyComplaintsPage() {
       {items && items.length > 0 && (
         <Link
           href="/submit"
-          className="block rounded bg-blue-600 p-2 text-center font-medium text-white hover:bg-blue-700"
+          className="block rounded-md bg-signal p-2 text-center font-medium text-white transition-colors duration-150 hover:bg-signal-dark"
         >
           Report another issue
         </Link>
