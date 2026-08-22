@@ -52,7 +52,7 @@ create table public.complaints (
   duplicate_of_complaint_id   uuid references public.complaints(id) on delete set null,
 
   description   text not null,
-  category      complaint_category,
+  category      complaint_category not null,
   severity      complaint_severity,
   status        complaint_status not null default 'submitted',
 
@@ -77,8 +77,6 @@ create table public.complaint_images (
   id             uuid primary key default gen_random_uuid(),
   complaint_id   uuid not null references public.complaints(id) on delete cascade,
   image_url      text not null,
-  cv_label       text,             -- e.g. "pothole"
-  cv_confidence  numeric(4,3) check (cv_confidence between 0 and 1),
   created_at     timestamptz not null default now()
 );
 

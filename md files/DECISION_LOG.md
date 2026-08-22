@@ -29,3 +29,19 @@ changing the schema and costs per call; rejected for a 5-day local build)
 **Alternatives considered:** none yet — this is a placeholder; revisit once 20+ real
 complaints exist and false-positive rate can actually be checked
 **Impact:** `backend/app/services/embeddings.py::find_duplicate_complaints()`
+
+### 2026-08-22 — Drop computer vision, citizen selects category manually
+**Decision:** Remove the YOLOv8 CV pipeline entirely. The citizen selects the complaint
+category from a fixed dropdown at submission time; the uploaded photo is stored as
+evidence only and is not processed by any model.
+**Context:** CV auto-detection added complexity (model weights, confidence thresholds,
+category-source conflicts with NLP) without a clear accuracy bar for a 5-day build, and
+manual selection is more reliable for the categories in scope.
+**Alternatives considered:** Keeping CV as a suggestion the citizen could accept or
+override — rejected as extra UI/scope for marginal benefit given the timeline.
+**Impact:** `nagar_ai_schema.sql` (`complaint_images` loses `cv_label`/`cv_confidence`,
+`complaints.category` becomes `not null`), `docs/API_CONTRACT.md` (new required
+`category` request field), `docs/ARCHITECTURE_CITIZEN_FLOW.md`, `opencode.md`,
+`docs/TASKS_PERSON1_CITIZEN.md`, `docs/ENVIRONMENT_SETUP.md`, `docs/GIT_WORKFLOW.md`,
+`backend/app/services/cv.py` (deleted), `backend/app/services/nlp.py` (no longer returns
+category).

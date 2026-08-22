@@ -49,7 +49,7 @@ divergence that's hard to detect later. Merge only, never rebase shared commits.
 <type>(<scope>): <short summary, imperative mood, no period>
 ```
 Types: `feat`, `fix`, `refactor`, `docs`, `chore`, `test`.
-Scope: `auth`, `submission`, `nlp`, `cv`, `dedup`, `upload`, `tracker`.
+Scope: `auth`, `submission`, `nlp`, `dedup`, `upload`, `tracker`.
 
 Examples:
 ```

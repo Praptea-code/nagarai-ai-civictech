@@ -10,7 +10,6 @@ nagar-ai/
 │   │   │   └── admin.py           # **only Person 2 touches this** (stub for now)
 │   │   ├── services/
 │   │   │   ├── nlp.py             # Person 1: classify text
-│   │   │   ├── cv.py              # Person 1: detect image
 │   │   │   ├── embeddings.py      # Person 1: generate + find duplicates
 │   │   │   ├── storage.py         # Person 1: upload to Supabase Storage
 │   │   │   └── db.py              # shared DB helpers (both may read, but Person 1 writes initial version)

@@ -26,29 +26,28 @@ per `docs/GIT_WORKFLOW.md`. Check off each item as you complete it.
 - [ ] Build `backend/app/routers/citizen.py::create_complaint()` exactly per
       `docs/API_CONTRACT.md` — wire NLP + storage in
 - [ ] Build the citizen submission form: `apps/citizen/app/submit/page.tsx` —
-      description textarea, optional photo upload, geolocation capture
+      description textarea, **category dropdown/select (required, matches the
+      `complaint_category` enum)**, optional photo upload, geolocation capture
       (`navigator.geolocation`, with manual lat/lng entry as a fallback)
 - [ ] Build `apps/citizen/lib/api.ts::submitComplaint()`
 - [ ] Manual test: submit a real complaint end to end, confirm it lands in Supabase with
       AI-generated category/severity/summary
 - [ ] Commit + push (one commit per function/component — see `GIT_WORKFLOW.md`)
 
-## Day 3 — CV, duplicate detection, status tracker
-- [ ] Build `backend/app/services/cv.py::detect_issue_in_image()` using pretrained
-      YOLOv8n (`ultralytics`) — general object detection, do not fine-tune unless Day 3
-      finishes early
+## Day 3 — duplicate detection, status tracker
 - [ ] Build `backend/app/services/embeddings.py::generate_embedding()` using
       `sentence-transformers/all-MiniLM-L6-v2` (384-dim, matches the schema)
 - [ ] Build `backend/app/services/embeddings.py::find_duplicate_complaints()` — pgvector
       cosine similarity query, threshold configurable, default 0.87
-- [ ] Wire CV + embeddings + dedup into `create_complaint()`
+- [ ] Wire embeddings + dedup into `create_complaint()`
 - [ ] Build `apps/citizen/app/my-complaints/page.tsx` — list + detail view with status
       history and a duplicate warning banner where applicable
 - [ ] Build `backend/app/routers/citizen.py::list_my_complaints()` and `get_complaint()`
 - [ ] Commit + push
 
 ## Day 4 — polish and edge cases
-- [ ] Handle submission without a photo gracefully (CV step skipped, not errored)
+- [ ] Handle submission without a photo gracefully (photo is optional evidence only —
+      no processing branches on its presence)
 - [ ] Handle low-confidence NLP/CV results — don't force a category below a confidence
       floor; leave `category = null` for admin triage instead of guessing
 - [ ] Add duplicate-warning UI: "This looks similar to an existing report," linking to

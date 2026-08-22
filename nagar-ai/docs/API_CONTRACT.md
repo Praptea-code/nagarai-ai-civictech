@@ -14,6 +14,7 @@ Request (`multipart/form-data`):
 | Field | Type | Required |
 |---|---|---|
 | description | string | yes |
+| category | string (enum: pothole, garbage, water_leakage, streetlight, flooding, drainage, other) | yes |
 | latitude | float | yes |
 | longitude | float | yes |
 | ward | string | no |
@@ -31,11 +32,13 @@ Response `201`:
   "ai_confidence": 0.94,
   "duplicate_of_complaint_id": null,
   "image_url": "https://.../complaint_1823.jpg",
-  "cv_label": "pothole",
-  "cv_confidence": 0.91,
   "created_at": "2026-08-18T10:03:00Z"
 }
 ```
+The response's `category` field echoes back exactly what the citizen submitted — it is
+not AI-generated and no model runs on the uploaded photo (the photo is stored as
+evidence only). `ai_summary` and `ai_confidence` still come from NLP on the description
+text.
 Response `422`: FastAPI's default Pydantic validation error shape (missing description,
 invalid lat/lng, etc).
 

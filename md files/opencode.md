@@ -14,7 +14,7 @@ You own, end to end:
 - `POST /complaints` and other citizen-facing FastAPI endpoints
 - NLP classification of complaint text
 - Photo upload to Supabase Storage
-- Computer vision detection on uploaded photos
+- Citizen selects a complaint category from a fixed list at submission time
 - Duplicate complaint detection (embeddings + pgvector)
 - The citizen's "my complaints" status tracker
 
@@ -30,7 +30,6 @@ files under `apps/admin/` or `backend/app/routers/admin.py` unless explicitly to
 | Auth, DB, Storage | Supabase (Postgres, Supabase Auth, Supabase Storage) |
 | NLP | Hugging Face `transformers` — zero-shot classification |
 | Embeddings / dedup | `sentence-transformers` (`all-MiniLM-L6-v2`, 384 dims) + `pgvector` |
-| Computer vision | `ultralytics` YOLOv8 (pretrained, no training from scratch) |
 | Package managers | `npm` (frontend), `pip` + `venv` (backend) |
 
 If a task seems to need a different framework, ORM, CSS library, or model family, stop
