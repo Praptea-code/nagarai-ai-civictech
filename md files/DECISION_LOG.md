@@ -166,3 +166,23 @@ no limit but truncating before NLP (rejected - silently altering citizen input i
 than asking them to shorten it).
 **Impact:** Server rejects >2000 or whitespace-only descriptions with FastAPI's default
 422 validation shape; client blocks submission before any network call.
+
+### 2026-08-22 - Severity confidence floor of 0.5; low-confidence severity stored as null
+**Decision:** `SEVERITY_CONFIDENCE_FLOOR = 0.5` in `backend/app/services/nlp.py`. When
+the zero-shot classifier's top-label score is below the floor, `severity` is stored as
+null (and returned null to the client) so admin triage decides instead of acting on a
+guess. `ai_confidence` still stores the raw score either way.
+**Context:** TASKS_PERSON1 Day 4 asks for a confidence floor on NLP output. It phrases
+this as leaving *category* null, but category is citizen-supplied and validated against
+the enum per DECISION_LOG 2026-08-22 - it is never guessed by NLP. Severity is the only
+model-derived field, so it is the one that gets nulled. The floor value: random
+baseline for 4 labels is ~0.25; bart-large-mnli's confident scores on this label set
+typically land 0.4-0.9, so 0.5 separates "meaningful signal" from "coin flip" without
+nulling most real submissions.
+**Alternatives considered:** 0.35 floor (rejected - too close to baseline, passes
+garbage through); 0.7 (rejected - would null a large share of legitimate
+classifications); asking NLP for category too when citizen text is ambiguous (rejected -
+contradicts the citizen-supplied-category decision).
+**Impact:** `severity: string | null` in the 201 response (contract already types it
+nullable); complaints table already allows null severity; no client change needed - the
+tracker UI never renders severity.

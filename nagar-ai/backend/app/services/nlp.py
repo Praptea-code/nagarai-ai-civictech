@@ -10,6 +10,11 @@ logger = logging.getLogger(__name__)
 
 SEVERITY_LABELS = ["low", "medium", "high", "critical"]
 
+# Below this top-label score the classifier is effectively guessing (random
+# baseline for 4 labels is ~0.25); store severity=null for admin triage
+# instead of a misleading guess. See DECISION_LOG 2026-08-22.
+SEVERITY_CONFIDENCE_FLOOR = 0.5
+
 _classifier = None
 
 
@@ -31,21 +36,39 @@ def _get_classifier():
 
 def _extract_summary(text: str, max_chars: int = 200) -> str:
     """Return the first sentence of the text, truncated to max_chars."""
-    first_sentence = re.split(r"(?<=[.!?])\s+", text.strip(), maxsplit=1)[0]
-    return first_sentence[:max_chars]
+    logger.info("_extract_summary called | text_len=%d max_chars=%d", len(text), max_chars)
+    try:
+        first_sentence = re.split(r"(?<=[.!?])\s+", text.strip(), maxsplit=1)[0]
+        summary = first_sentence[:max_chars]
+        logger.info("_extract_summary success | summary_len=%d", len(summary))
+        return summary
+    except Exception:
+        logger.exception("_extract_summary failed | text_len=%d", len(text))
+        raise
 
 
 async def classify_complaint_text(text: str) -> dict:
     """Classify complaint severity via zero-shot NLP and return a short summary.
 
-    Returns {"severity": str, "summary": str, "confidence": float} — no category;
-    category is citizen-supplied per DECISION_LOG 2026-08-22.
+    Returns {"severity": str | None, "summary": str, "confidence": float} — no
+    category; category is citizen-supplied per DECISION_LOG 2026-08-22. When the
+    top-label score is under SEVERITY_CONFIDENCE_FLOOR, severity is None so the
+    admin triages it rather than acting on a guess.
     """
     logger.info("classify_complaint_text called | text_len=%d", len(text))
     try:
         result = await asyncio.to_thread(_get_classifier(), text, candidate_labels=SEVERITY_LABELS)
         severity = result["labels"][0]
         confidence = float(result["scores"][0])
+        if confidence < SEVERITY_CONFIDENCE_FLOOR:
+            logger.info(
+                "classify_complaint_text low confidence | severity_guess=%s confidence=%.4f "
+                "floor=%.2f -> severity=None for admin triage",
+                severity,
+                confidence,
+                SEVERITY_CONFIDENCE_FLOOR,
+            )
+            severity = None
         summary = _extract_summary(text)
         payload = {"severity": severity, "summary": summary, "confidence": round(confidence, 4)}
         logger.info(
