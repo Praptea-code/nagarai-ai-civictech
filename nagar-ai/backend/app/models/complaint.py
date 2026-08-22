@@ -1,8 +1,21 @@
+from typing import Literal
+
 from pydantic import BaseModel
+
+ComplaintCategory = Literal[
+    "pothole",
+    "garbage",
+    "water_leakage",
+    "streetlight",
+    "flooding",
+    "drainage",
+    "other",
+]
 
 
 class ComplaintCreate(BaseModel):
     description: str
+    category: ComplaintCategory
     latitude: float
     longitude: float
     ward: str | None = None

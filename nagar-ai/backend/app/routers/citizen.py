@@ -15,7 +15,7 @@ async def create_complaint(
     return {"status": "stub"}
 
 
-@router.get("/complaints")
+@router.get("/complaints/mine")
 async def list_my_complaints():
     return {"complaints": []}
 

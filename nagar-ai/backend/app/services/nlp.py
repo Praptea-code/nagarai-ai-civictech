@@ -1,7 +1,7 @@
 """NLP service — complaint classification and summarization."""
 
 
-async def classify_complaint(description: str) -> dict:
+async def classify_complaint_text(description: str) -> dict:
     """Return severity and summary for a complaint description."""
     return {
         "severity": "low",
