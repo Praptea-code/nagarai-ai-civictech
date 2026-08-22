@@ -2,7 +2,13 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import settings
+from app.core.logging import setup_logging
 from app.routers import citizen, admin
+
+# Without this call every service/router logger.info() was silently dropped:
+# Python's last-resort handler only emits WARNING+ and nothing else configured
+# logging in-process.
+setup_logging(settings.LOG_LEVEL)
 
 app = FastAPI(title="Nagar AI Backend", version="0.1.0")
 

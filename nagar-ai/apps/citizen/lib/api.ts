@@ -54,6 +54,7 @@ async function getAccessToken(): Promise<string> {
   const { data } = await supabase.auth.getSession();
   const token = data.session?.access_token;
   if (!token) {
+    log("warn", "getAccessToken no active session");
     throw new Error("You must be logged in to do that.");
   }
   return token;

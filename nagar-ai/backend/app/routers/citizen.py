@@ -63,8 +63,13 @@ async def require_citizen(
     access_token = authorization.removeprefix("Bearer ").strip()
     try:
         response = await asyncio.to_thread(supabase.auth.get_user, access_token)
-    except Exception:
-        logger.info("require_citizen rejected request | invalid_or_expired_token=true")
+    except Exception as exc:
+        # Intentional handling (401, not a crash), so info level without a stack
+        # trace — but keep the exception type for greppability.
+        logger.info(
+            "require_citizen rejected request | invalid_or_expired_token=true err=%s",
+            type(exc).__name__,
+        )
         raise HTTPException(
             status_code=401,
             detail="Invalid or expired token",
