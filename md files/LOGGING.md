@@ -5,22 +5,25 @@ three things: entry, successful exit, and errors. No function is exempt, includi
 helpers — a missing log is why a bug takes an hour to find instead of ten seconds.
 
 ## Backend (Python) setup
-`backend/app/logging_config.py`:
+`backend/app/core/logging.py`:
 ```python
 import logging
 import sys
 
-def configure_logging():
-    logging.basicConfig(
-        level=logging.INFO,
-        format="%(asctime)s | %(levelname)s | %(name)s | %(message)s",
-        handlers=[
-            logging.StreamHandler(sys.stdout),
-            logging.FileHandler("logs/citizen-flow.log"),
-        ],
-    )
+def setup_logging(level: str = "INFO") -> logging.Logger:
+    logger = logging.getLogger("nagar_ai")
+    logger.setLevel(getattr(logging, level.upper(), logging.INFO))
+
+    handler = logging.StreamHandler(sys.stdout)
+    handler.setFormatter(logging.Formatter("%(asctime)s [%(levelname)s] %(name)s: %(message)s"))
+    logger.addHandler(handler)
+
+    return logger
 ```
-Call `configure_logging()` once, in `app/main.py`, at startup.
+Call `setup_logging(settings.LOG_LEVEL)` once, in `app/main.py`, at startup. All
+service/router loggers are children of `nagar_ai`, so they inherit the level and
+handler through propagation. If nothing calls `setup_logging()`, Python's last-resort
+handler silently drops every INFO record - wiring it in is mandatory, not optional.
 
 ## Pattern every function follows
 ```python
@@ -54,38 +57,33 @@ Rules:
 ## Frontend (TypeScript)
 `apps/citizen/lib/logger.ts`:
 ```typescript
-type Level = "info" | "warn" | "error";
+type LogLevel = "info" | "warn" | "error";
 
-function log(level: Level, fn: string, message: string, meta?: Record<string, unknown>) {
-  const entry = { level, fn, message, meta, ts: new Date().toISOString() };
-  // eslint-disable-next-line no-console
-  console[level === "info" ? "log" : level](JSON.stringify(entry));
+export function log(level: LogLevel, message: string, data?: unknown) {
+  const timestamp = new Date().toISOString();
+  console[level](`[${timestamp}] [${level.toUpperCase()}] ${message}`, data ?? "");
 }
-
-export const logger = {
-  info: (fn: string, message: string, meta?: Record<string, unknown>) => log("info", fn, message, meta),
-  warn: (fn: string, message: string, meta?: Record<string, unknown>) => log("warn", fn, message, meta),
-  error: (fn: string, message: string, meta?: Record<string, unknown>) => log("error", fn, message, meta),
-};
 ```
 Use it in every client function that calls the API or Supabase:
 ```typescript
-export async function submitComplaint(data: ComplaintInput) {
-  logger.info("submitComplaint", "submitting", { hasImage: !!data.image });
+export async function submitComplaint(input: ComplaintInput) {
+  log("info", "submitComplaint sending", { hasImage: !!input.image, descLen: input.description.length });
   try {
-    const res = await fetch("/api/v1/complaints", { method: "POST", body: toFormData(data) });
+    const res = await fetch("/api/v1/complaints", { method: "POST", body: toFormData(input) });
     if (!res.ok) throw new Error(`status ${res.status}`);
     const json = await res.json();
-    logger.info("submitComplaint", "success", { id: json.id, status: json.status });
+    log("info", "submitComplaint success", { id: json.id, status: json.status });
     return json;
   } catch (err) {
-    logger.error("submitComplaint", "failed", { error: String(err) });
+    log("error", "submitComplaint failed", { message: String(err) });
     throw err;
   }
 }
 ```
 
 ## Where logs go
-- Backend: `logs/citizen-flow.log` (add `logs/` to `.gitignore` — logs are never committed)
+- Backend: stdout (visible in `docker logs` / uvicorn output). No file handler —
+  container stdout is the source of truth for a project this size; add one only if a
+  grader or teammate explicitly asks for persisted files.
 - Frontend: browser console during development. That's sufficient for a 5-day project —
   don't add a remote logging service unless explicitly asked.
