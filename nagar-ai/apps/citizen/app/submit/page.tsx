@@ -7,6 +7,8 @@ import { submitComplaint } from "@/lib/api";
 import { log } from "@/lib/logger";
 
 const MAX_IMAGE_BYTES = 8 * 1024 * 1024;
+const MAX_DESCRIPTION_LENGTH = 2000;
+const ALLOWED_IMAGE_TYPES = new Set(["image/jpeg", "image/png"]);
 
 const CATEGORY_OPTIONS = [
   { label: "Pothole", value: "pothole" },
@@ -60,6 +62,15 @@ export default function SubmitPage() {
       setImage(null);
       return;
     }
+    // The accept attribute only filters the file picker; check the MIME type
+    // so files forced through "All files" are rejected before any upload.
+    if (!ALLOWED_IMAGE_TYPES.has(file.type)) {
+      setImage(null);
+      e.target.value = "";
+      setImageError("Photo must be a JPEG or PNG.");
+      log("warn", "rejected unsupported image type", { type: file.type });
+      return;
+    }
     if (file.size > MAX_IMAGE_BYTES) {
       setImage(null);
       e.target.value = "";
@@ -79,6 +90,10 @@ export default function SubmitPage() {
     const lng = Number(longitude);
     if (!description.trim()) {
       setFormError("Please describe the issue.");
+      return;
+    }
+    if (description.trim().length > MAX_DESCRIPTION_LENGTH) {
+      setFormError(`Description is too long. Maximum is ${MAX_DESCRIPTION_LENGTH} characters.`);
       return;
     }
     if (!category) {
@@ -128,6 +143,7 @@ export default function SubmitPage() {
           <textarea
             required
             rows={4}
+            maxLength={MAX_DESCRIPTION_LENGTH}
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             placeholder="Describe the problem and where it is..."

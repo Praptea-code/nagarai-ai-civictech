@@ -15,7 +15,14 @@ from fastapi import (
     UploadFile,
 )
 
-from app.models.complaint import ComplaintCategory
+from app.models.complaint import (
+    LATITUDE_MAX,
+    LATITUDE_MIN,
+    LONGITUDE_MAX,
+    LONGITUDE_MIN,
+    MAX_DESCRIPTION_LENGTH,
+    ComplaintCategory,
+)
 from app.services.db import citizen_client, save_complaint, supabase
 from app.services.embeddings import find_duplicate_complaints, generate_embedding
 from app.services.nlp import classify_complaint_text
@@ -69,10 +76,12 @@ async def require_citizen(
 
 @router.post("/complaints", status_code=201)
 async def create_complaint(
-    description: str = Form(...),
+    # Declarative constraints produce FastAPI's default 422 shape per
+    # docs/API_CONTRACT.md; bounds mirror ComplaintCreate in models/complaint.py.
+    description: str = Form(..., min_length=1, max_length=MAX_DESCRIPTION_LENGTH),
     category: ComplaintCategory = Form(...),
-    latitude: float = Form(...),
-    longitude: float = Form(...),
+    latitude: float = Form(..., ge=LATITUDE_MIN, le=LATITUDE_MAX),
+    longitude: float = Form(..., ge=LONGITUDE_MIN, le=LONGITUDE_MAX),
     ward: str | None = Form(None),
     municipality: str | None = Form(None),
     image: UploadFile | None = File(None),
@@ -88,17 +97,27 @@ async def create_complaint(
         getattr(image, "content_type", None) if has_image else None,
     )
     try:
-        if not (-90 <= latitude <= 90) or not (-180 <= longitude <= 180):
-            raise HTTPException(status_code=422, detail="latitude/longitude out of range")
+        if not description.strip():
+            logger.info("create_complaint rejected request | blank_description=true")
+            raise HTTPException(status_code=422, detail="description must not be blank")
 
         image_bytes: bytes | None = None
         content_type: str | None = None
         if has_image:
             content_type = image.content_type
             if content_type not in ALLOWED_IMAGE_TYPES:
+                logger.info(
+                    "create_complaint rejected request | bad_content_type=%s",
+                    content_type,
+                )
                 raise HTTPException(status_code=422, detail="image must be a JPEG or PNG")
             image_bytes = await image.read()
             if len(image_bytes) > MAX_IMAGE_BYTES:
+                logger.info(
+                    "create_complaint rejected request | size_bytes=%d limit=%d",
+                    len(image_bytes),
+                    MAX_IMAGE_BYTES,
+                )
                 raise HTTPException(status_code=422, detail="image exceeds the 8MB size limit")
 
         # Flow 2: NLP, embedding and evidence upload are independent — run them

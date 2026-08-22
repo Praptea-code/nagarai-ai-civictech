@@ -151,3 +151,18 @@ everything same-origin (rejected for now — extra moving part; revisit for produc
 allow_origins=["*"] (rejected — sloppy default even with token auth).
 **Impact:** `backend/app/main.py`, `backend/app/core/config.py`. Production must set
 CORS_ORIGINS to the deployed citizen origin(s).
+
+### 2026-08-22 - Description length cap of 2000 characters
+**Decision:** Complaint descriptions are capped at `MAX_DESCRIPTION_LENGTH = 2000`
+(defined once in `backend/app/models/complaint.py`, imported by the router's Form
+declaration and mirrored client-side in `apps/citizen/app/submit/page.tsx`).
+**Context:** Day-4 task called for a "reasonable max length". Typical field reports are
+a few sentences; 2000 chars (~300 words) is generous for a pothole report while keeping
+NLP/embedding input bounded and DB rows small. The cap is enforced identically on
+client (textarea maxLength + JS check) and server (FastAPI Form constraint -> default
+422 shape), with a whitespace-only blank check alongside it.
+**Alternatives considered:** 500 chars (rejected - risks truncating legitimate detail);
+no limit but truncating before NLP (rejected - silently altering citizen input is worse
+than asking them to shorten it).
+**Impact:** Server rejects >2000 or whitespace-only descriptions with FastAPI's default
+422 validation shape; client blocks submission before any network call.
