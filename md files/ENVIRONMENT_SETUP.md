@@ -39,6 +39,26 @@ npm install
 npm run dev
 ```
 
+## Local run (Docker)
+
+Requires Docker and Docker Compose. `.env` (backend) and `.env.local` (citizen) still
+need to exist locally exactly as described above — Compose reads them via `env_file`,
+they are never baked into the image, and they're still git-ignored.
+
+```bash
+docker compose up --build
+```
+
+Backend: http://localhost:8000
+Citizen app: http://localhost:3000
+
+Rebuild after changing `requirements.txt` or `package.json`:
+```bash
+docker compose up --build
+```
+Rebuild after pulling changes from another contributor if either file changed — a stale
+image is the most common Docker-related bug on a shared repo, not a git problem.
+
 ## `.gitignore` must include
 ```
 .env

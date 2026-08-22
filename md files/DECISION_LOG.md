@@ -45,3 +45,16 @@ override — rejected as extra UI/scope for marginal benefit given the timeline.
 `docs/TASKS_PERSON1_CITIZEN.md`, `docs/ENVIRONMENT_SETUP.md`, `docs/GIT_WORKFLOW.md`,
 `backend/app/services/cv.py` (deleted), `backend/app/services/nlp.py` (no longer returns
 category).
+
+### 2026-08-22 — Add Docker for backend and citizen frontend
+**Decision:** Containerize `backend/` (FastAPI) and `apps/citizen/` (Next.js) via
+individual Dockerfiles and a root `docker-compose.yml`. Supabase remains hosted/external
+and is not containerized. The admin service is intentionally left out of
+`docker-compose.yml` pending coordination with Person 2.
+**Context:** Wanted a consistent local dev environment across both contributors'
+machines and a path to containerized deploy.
+**Alternatives considered:** Running bare-metal only (kept as a documented fallback in
+`ENVIRONMENT_SETUP.md` rather than removed, since it's simpler for quick iteration).
+**Impact:** `backend/Dockerfile`, `backend/.dockerignore`, `apps/citizen/Dockerfile`,
+`apps/citizen/.dockerignore`, `docker-compose.yml`, `docs/ENVIRONMENT_SETUP.md`,
+`PROJECT_STRUCTURE.txt`, `opencode.md`, `docs/GIT_WORKFLOW.md`.

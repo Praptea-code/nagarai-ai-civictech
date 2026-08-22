@@ -1,0 +1,25 @@
+services:
+  backend:
+    build: ./backend
+    ports:
+      - "8000:8000"
+    env_file:
+      - ./backend/.env
+    volumes:
+      - ./backend:/app
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
+  citizen:
+    build: ./apps/citizen
+    ports:
+      - "3000:3000"
+    env_file:
+      - ./apps/citizen/.env.local
+    volumes:
+      - ./apps/citizen:/app
+      - /app/node_modules
+    command: npm run dev
+
+  # admin service intentionally omitted — apps/admin/ belongs to Person 2.
+  # Coordinate service name and port with them before adding it here;
+  # don't add it unilaterally, this file is shared between both of you.

@@ -19,6 +19,8 @@ nagar-ai/
 │   │   └── utils/                 # helpers (e.g., file validation)
 │   ├── requirements.txt
 │   ├── .env                       # backend secrets (never commit)
+│   ├── Dockerfile                 # backend container image
+│   ├── .dockerignore              # build-context exclusions
 │   └── pyproject.toml             # optional
 ├── apps/
 │   ├── citizen/                   # **Person 1 owns entire directory**
@@ -44,6 +46,8 @@ nagar-ai/
 │   │   ├── public/
 │   │   ├── .env.local             # frontend env (never commit)
 │   │   ├── package.json
+│   │   ├── Dockerfile             # citizen app container image
+│   │   ├── .dockerignore          # build-context exclusions
 │   │   └── tsconfig.json
 │   └── admin/                     # **Person 2 owns this – you never touch it**
 ├── docs/                          # all documentation (both persons edit, but rarely conflict)
@@ -56,5 +60,6 @@ nagar-ai/
 │   ├── TASKS_PERSON1_CITIZEN.md
 │   └── nagar_ai_schema.sql        # moved here for versioning
 ├── scripts/                       # dev scripts (e.g., seed, test)
+├── docker-compose.yml             # local dev: backend + citizen services
 ├── .gitignore
 └── README.md

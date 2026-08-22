@@ -31,6 +31,7 @@ files under `apps/admin/` or `backend/app/routers/admin.py` unless explicitly to
 | NLP | Hugging Face `transformers` — zero-shot classification |
 | Embeddings / dedup | `sentence-transformers` (`all-MiniLM-L6-v2`, 384 dims) + `pgvector` |
 | Package managers | `npm` (frontend), `pip` + `venv` (backend) |
+| Containerization | Docker — `backend/` and `apps/citizen/` only; `apps/admin/` is Person 2's own service definition, coordinate before editing `docker-compose.yml` |
 
 If a task seems to need a different framework, ORM, CSS library, or model family, stop
 and log the reason in `docs/DECISION_LOG.md` before switching — don't substitute quietly.

@@ -17,6 +17,14 @@ You work in exactly one branch: `feature-citizen`.
 - Confirm your branch before every change: `git branch --show-current` must print
   `feature-citizen`. If it doesn't, stop and fix it before editing anything.
 
+## `docker-compose.yml` is shared
+Unlike `apps/citizen/` and `backend/app/routers/citizen.py`, `docker-compose.yml` is
+touched by both Person 1 and Person 2 over time (it defines both frontends' services).
+Before editing it: `git fetch origin` and `git merge origin/feature-citizen --no-edit`
+(and the admin equivalent, once that branch exists) so you're not editing a stale copy.
+Conflicts here are almost always mechanical (adding/removing a service block) — resolve
+per the existing "Mechanical conflict" rule below, and log the resolution.
+
 ## Start of every session
 ```bash
 git status                        # working tree must be clean; if not, stop and report why
