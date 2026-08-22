@@ -152,6 +152,30 @@ create trigger on_auth_user_created
 after insert on auth.users
 for each row execute function public.handle_new_user();
 
+-- Cosine-similarity duplicate search over complaint embeddings (pgvector).
+-- Called by the backend via supabase.rpc() — pgvector operators are not exposed
+-- through PostgREST filters directly.
+-- similarity = 1 - cosine distance (<=>); threshold 0.87 per DECISION_LOG.
+create or replace function public.find_duplicate_complaints(
+  query_embedding      vector(384),
+  similarity_threshold double precision default 0.87
+)
+returns table (
+  id          uuid,
+  description text,
+  similarity  double precision
+)
+language sql stable as $$
+  select c.id,
+         c.description,
+         1 - (c.embedding <=> query_embedding) as similarity
+  from public.complaints c
+  where c.embedding is not null
+    and 1 - (c.embedding <=> query_embedding) >= similarity_threshold
+  order by similarity desc
+  limit 5;
+$$;
+
 -- =========================================================
 -- Row Level Security
 -- =========================================================

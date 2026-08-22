@@ -4,3 +4,10 @@ python-multipart
 supabase
 python-dotenv
 pydantic-settings
+
+# ML stack: zero-shot NLP classification + MiniLM embeddings.
+# torch from the CPU wheel index keeps the image ~2GB smaller than default CUDA builds.
+--extra-index-url https://download.pytorch.org/whl/cpu
+transformers
+torch
+sentence-transformers
