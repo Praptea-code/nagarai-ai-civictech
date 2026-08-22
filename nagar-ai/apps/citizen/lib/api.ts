@@ -25,6 +25,31 @@ export interface ComplaintCreated {
   created_at: string;
 }
 
+export interface ComplaintListItem {
+  id: string;
+  description: string;
+  category: string;
+  severity: string | null;
+  status: string;
+  department: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface StatusHistoryEntry {
+  status: string;
+  created_at: string;
+}
+
+export interface ComplaintDetail {
+  id: string;
+  description: string;
+  status: string;
+  status_history: StatusHistoryEntry[];
+  image_url: string | null;
+  duplicate_of_complaint_id: string | null;
+}
+
 async function getAccessToken(): Promise<string> {
   const { data } = await supabase.auth.getSession();
   const token = data.session?.access_token;
@@ -32,6 +57,24 @@ async function getAccessToken(): Promise<string> {
     throw new Error("You must be logged in to do that.");
   }
   return token;
+}
+
+async function requestJson<T>(path: string): Promise<T> {
+  const token = await getAccessToken();
+  const res = await fetch(`${API_BASE}${path}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) {
+    let detail: string | undefined;
+    try {
+      detail = extractErrorDetail(await res.json());
+    } catch {
+      // non-JSON error body
+    }
+    log("warn", "api request failed", { path, status: res.status, detail });
+    throw new Error(detail || `Request failed (${res.status})`);
+  }
+  return (await res.json()) as T;
 }
 
 function extractErrorDetail(body: unknown): string | undefined {
@@ -84,5 +127,22 @@ export async function submitComplaint(
     id: payload.id,
     status: payload.status,
   });
+  return payload;
+}
+
+export async function fetchMyComplaints(): Promise<ComplaintListItem[]> {
+  const payload = await requestJson<{ items: ComplaintListItem[]; total: number }>(
+    "/complaints/mine",
+  );
+  log("info", "fetchMyComplaints success", {
+    total: payload.total,
+    returned: payload.items.length,
+  });
+  return payload.items;
+}
+
+export async function fetchComplaint(id: string): Promise<ComplaintDetail> {
+  const payload = await requestJson<ComplaintDetail>(`/complaints/${id}`);
+  log("info", "fetchComplaint success", { id: payload.id });
   return payload;
 }
