@@ -10,7 +10,7 @@ export interface SubmitComplaintInput {
   longitude: number;
   ward?: string | null;
   municipality?: string | null;
-  image?: File | null;
+  images?: File[];
 }
 
 export interface ComplaintCreated {
@@ -98,11 +98,13 @@ export async function submitComplaint(
   form.append("longitude", String(input.longitude));
   if (input.ward) form.append("ward", input.ward);
   if (input.municipality) form.append("municipality", input.municipality);
-  if (input.image) form.append("image", input.image);
+  for (const file of input.images ?? []) {
+    form.append("images", file);
+  }
 
   log("info", "submitComplaint sending", {
     category: input.category,
-    hasImage: Boolean(input.image),
+    numImages: input.images?.length ?? 0,
     descLen: input.description.length,
   });
 

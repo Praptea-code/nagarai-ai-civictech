@@ -7,6 +7,7 @@ import { submitComplaint } from "@/lib/api";
 import { log } from "@/lib/logger";
 
 const MAX_IMAGE_BYTES = 8 * 1024 * 1024;
+const MAX_IMAGES = 5;
 const MAX_DESCRIPTION_LENGTH = 2000;
 const ALLOWED_IMAGE_TYPES = new Set(["image/jpeg", "image/png"]);
 
@@ -29,7 +30,8 @@ export default function SubmitPage() {
   const [latitude, setLatitude] = useState("");
   const [longitude, setLongitude] = useState("");
   const [geoStatus, setGeoStatus] = useState<string | null>(null);
-  const [image, setImage] = useState<File | null>(null);
+  const [images, setImages] = useState<File[]>([]);
+  const [previews, setPreviews] = useState<{ file: File; url: string }[]>([]);
   const [imageError, setImageError] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -55,31 +57,43 @@ export default function SubmitPage() {
     );
   }, []);
 
-  function handleImageChange(e: React.ChangeEvent<HTMLInputElement>) {
+  // Object URLs for thumbnail previews; revoked when the list changes/unmounts.
+  useEffect(() => {
+    const next = images.map((file) => ({ file, url: URL.createObjectURL(file) }));
+    setPreviews(next);
+    return () => next.forEach((p) => URL.revokeObjectURL(p.url));
+  }, [images]);
+
+  function addFiles(incoming: FileList | null) {
+    if (!incoming || incoming.length === 0) return;
     setImageError(null);
-    const file = e.target.files?.[0];
-    if (!file) {
-      setImage(null);
+    const list = Array.from(incoming);
+    const badType = list.find((f) => !ALLOWED_IMAGE_TYPES.has(f.type));
+    if (badType) {
+      setImageError(`"${badType.name}" is not a JPEG or PNG.`);
+      log("warn", "rejected unsupported image type", { type: badType.type });
       return;
     }
-    // The accept attribute only filters the file picker; check the MIME type
-    // so files forced through "All files" are rejected before any upload.
-    if (!ALLOWED_IMAGE_TYPES.has(file.type)) {
-      setImage(null);
-      e.target.value = "";
-      setImageError("Photo must be a JPEG or PNG.");
-      log("warn", "rejected unsupported image type", { type: file.type });
+    const tooBig = list.find((f) => f.size > MAX_IMAGE_BYTES);
+    if (tooBig) {
+      setImageError(`"${tooBig.name}" is over the 8MB limit.`);
+      log("warn", "rejected oversized image", { sizeBytes: tooBig.size });
       return;
     }
-    if (file.size > MAX_IMAGE_BYTES) {
-      setImage(null);
-      e.target.value = "";
-      setImageError("Photo is too large. Maximum size is 8MB.");
-      log("warn", "rejected oversized image", { sizeBytes: file.size });
+    if (images.length + list.length > MAX_IMAGES) {
+      setImageError(`You can attach at most ${MAX_IMAGES} photos per report.`);
+      log("warn", "rejected image batch over the limit", {
+        current: images.length,
+        incoming: list.length,
+        max: MAX_IMAGES,
+      });
       return;
     }
-    setImage(file);
-    log("info", "image selected", { sizeBytes: file.size });
+    setImages((prev) => [...prev, ...list]);
+  }
+
+  function removeImage(index: number) {
+    setImages((prev) => prev.filter((_, i) => i !== index));
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -118,7 +132,7 @@ export default function SubmitPage() {
         longitude: lng,
         ward: ward.trim() || null,
         municipality: municipality.trim() || null,
-        image,
+        images,
       });
       router.push("/my-complaints");
     } catch (err) {
@@ -228,15 +242,65 @@ export default function SubmitPage() {
           </label>
         </div>
 
-        <label className="block text-sm font-medium">
-          Photo (optional)
-          <input
-            type="file"
-            accept="image/jpeg,image/png"
-            onChange={handleImageChange}
-            className="mt-1 block w-full text-sm text-gray-600 file:mr-3 file:rounded file:border-0 file:bg-blue-50 file:p-2 file:text-sm file:text-blue-700"
-          />
-        </label>
+        <fieldset>
+          <legend className="text-sm font-medium">
+            Photos (optional, up to {MAX_IMAGES}) <span className="text-xs font-normal text-gray-500">JPEG or PNG, max 8MB each</span>
+          </legend>
+          <div className="mt-1 grid grid-cols-2 gap-2">
+            <label className="block text-sm">
+              <span className="text-gray-600">Choose from gallery</span>
+              <input
+                type="file"
+                accept="image/jpeg,image/png"
+                multiple
+                onChange={(e) => {
+                  addFiles(e.target.files);
+                  e.target.value = "";
+                }}
+                className="mt-1 block w-full text-sm text-gray-600 file:mr-3 file:rounded file:border-0 file:bg-blue-50 file:p-2 file:text-sm file:text-blue-700"
+              />
+            </label>
+            <label className="block text-sm">
+              <span className="text-gray-600">Take photo</span>
+              {/* capture="environment" opens the rear camera directly on mobile;
+                  each capture appends to the same list, so users can tap it repeatedly. */}
+              <input
+                type="file"
+                accept="image/*"
+                capture="environment"
+                onChange={(e) => {
+                  addFiles(e.target.files);
+                  e.target.value = "";
+                }}
+                className="mt-1 block w-full text-sm text-gray-600 file:mr-3 file:rounded file:border-0 file:bg-green-50 file:p-2 file:text-sm file:text-green-700"
+              />
+            </label>
+          </div>
+
+          {previews.length > 0 && (
+            <ul className="mt-2 flex flex-wrap gap-2">
+              {previews.map((preview, index) => (
+                <li key={`${preview.file.name}-${index}`} className="relative">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={preview.url}
+                    alt={`Photo ${index + 1}`}
+                    className="h-20 w-20 rounded border border-gray-300 object-cover"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => removeImage(index)}
+                    aria-label={`Remove photo ${index + 1}`}
+                    className="absolute -right-2 -top-2 h-6 w-6 rounded-full bg-red-600 text-sm leading-none text-white"
+                  >
+                    ×
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </fieldset>
+
         {imageError && (
           <p role="alert" className="rounded bg-red-50 p-2 text-sm text-red-600">
             {imageError}
