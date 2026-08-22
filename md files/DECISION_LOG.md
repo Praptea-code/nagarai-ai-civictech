@@ -136,3 +136,18 @@ may insert history rows (rejected — weakens admin-only audit trail invariant).
 added locally), `backend/app/services/db.py` (citizen_client factory),
 `backend/app/routers/citizen.py`. Existence probe reveals whether a complaint id exists
 to non-owners; ids are UUIDs (unguessable) so this leaks nothing practical.
+
+### 2026-08-22 — CORS middleware for the citizen SPA origin
+**Decision:** `main.py` adds FastAPI `CORSMiddleware` allowing GET/POST with
+Authorization/Content-Type headers from origins listed in the new `CORS_ORIGINS`
+setting (comma-separated, default `http://localhost:3000`). No credentials mode —
+auth is bearer tokens in a header, never cookies.
+**Context:** The first real browser test of the submission flow (headless Edge against
+the live backend) exposed that every POST from the SPA died at preflight:
+`OPTIONS /api/v1/complaints -> 405`, so the browser silently blocked the request. All
+earlier backend verification used non-browser clients (httpx), which skip CORS entirely.
+**Alternatives considered:** Proxying API calls through Next.js rewrites to keep
+everything same-origin (rejected for now — extra moving part; revisit for production);
+allow_origins=["*"] (rejected — sloppy default even with token auth).
+**Impact:** `backend/app/main.py`, `backend/app/core/config.py`. Production must set
+CORS_ORIGINS to the deployed citizen origin(s).
