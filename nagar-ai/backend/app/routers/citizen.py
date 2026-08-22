@@ -21,6 +21,7 @@ from app.models.complaint import (
     LONGITUDE_MAX,
     LONGITUDE_MIN,
     MAX_DESCRIPTION_LENGTH,
+    MAX_IMAGES,
     ComplaintCategory,
 )
 from app.services.db import citizen_client, save_complaint, supabase
@@ -89,54 +90,66 @@ async def create_complaint(
     longitude: float = Form(..., ge=LONGITUDE_MIN, le=LONGITUDE_MAX),
     ward: str | None = Form(None),
     municipality: str | None = Form(None),
-    image: UploadFile | None = File(None),
+    images: list[UploadFile] | None = File(None),
     citizen: tuple[str, str] = Depends(require_citizen),
 ):
     """Run the Flow 1 / Flow 2 submission pipeline and persist the complaint."""
     citizen_id, _access_token = citizen
-    has_image = image is not None and bool(image.filename)
+    files = [f for f in (images or []) if f is not None and bool(f.filename)]
     logger.info(
-        "create_complaint called | desc_len=%d has_image=%s content_type=%s",
+        "create_complaint called | desc_len=%d num_images=%d",
         len(description),
-        has_image,
-        getattr(image, "content_type", None) if has_image else None,
+        len(files),
     )
     try:
         if not description.strip():
             logger.info("create_complaint rejected request | blank_description=true")
             raise HTTPException(status_code=422, detail="description must not be blank")
 
-        image_bytes: bytes | None = None
-        content_type: str | None = None
-        if has_image:
-            content_type = image.content_type
+        if len(files) > MAX_IMAGES:
+            logger.info(
+                "create_complaint rejected request | num_images=%d max=%d", len(files), MAX_IMAGES
+            )
+            raise HTTPException(status_code=422, detail=f"at most {MAX_IMAGES} images are allowed")
+
+        # Validate every file up front; any failure rejects the whole request —
+        # bad photos are never silently dropped while good ones upload.
+        prepared: list[tuple[bytes, str]] = []
+        for image in files:
+            content_type = image.content_type or ""
             if content_type not in ALLOWED_IMAGE_TYPES:
                 logger.info(
-                    "create_complaint rejected request | bad_content_type=%s",
-                    content_type,
+                    "create_complaint rejected request | bad_content_type=%s", content_type
                 )
-                raise HTTPException(status_code=422, detail="image must be a JPEG or PNG")
-            image_bytes = await image.read()
-            if len(image_bytes) > MAX_IMAGE_BYTES:
+                raise HTTPException(
+                    status_code=422, detail="all images must be JPEG or PNG"
+                )
+            data = await image.read()
+            if len(data) > MAX_IMAGE_BYTES:
                 logger.info(
                     "create_complaint rejected request | size_bytes=%d limit=%d",
-                    len(image_bytes),
+                    len(data),
                     MAX_IMAGE_BYTES,
                 )
-                raise HTTPException(status_code=422, detail="image exceeds the 8MB size limit")
+                raise HTTPException(
+                    status_code=422, detail="each image must be 8MB or smaller"
+                )
+            prepared.append((data, content_type))
 
-        # Flow 2: NLP, embedding and evidence upload are independent — run them
-        # concurrently; only duplicate detection waits on the embedding.
+        # Flow 2: NLP, embedding and all evidence uploads are independent — run
+        # them concurrently; only duplicate detection waits on the embedding.
         complaint_id = str(uuid.uuid4())
         tasks = [
             classify_complaint_text(description),
             asyncio.to_thread(generate_embedding, description),
         ]
-        if image_bytes is not None:
-            tasks.append(upload_complaint_image(image_bytes, complaint_id, content_type))
+        tasks.extend(
+            upload_complaint_image(data, complaint_id, content_type, slot=slot)
+            for slot, (data, content_type) in enumerate(prepared)
+        )
         results = await asyncio.gather(*tasks)
         nlp_result, embedding = results[0], results[1]
-        image_url = results[2] if len(results) == 3 else None
+        image_urls = list(results[2:])
 
         matches = await find_duplicate_complaints(embedding)
         status = "submitted"
@@ -162,7 +175,7 @@ async def create_complaint(
             embedding=embedding,
             status=status,
             duplicate_of_complaint_id=duplicate_of_complaint_id,
-            image_url=image_url,
+            image_urls=image_urls,
         )
 
         payload = {
@@ -173,7 +186,7 @@ async def create_complaint(
             "ai_summary": nlp_result["summary"],
             "ai_confidence": nlp_result["confidence"],
             "duplicate_of_complaint_id": duplicate_of_complaint_id,
-            "image_url": image_url,
+            "image_urls": image_urls,
             "created_at": complaint["created_at"],
         }
         logger.info(
@@ -304,10 +317,9 @@ async def get_complaint(
             .select("image_url")
             .eq("complaint_id", complaint_id)
             .order("created_at")
-            .limit(1)
             .execute()
         )
-        image_url = images_res.data[0]["image_url"] if images_res.data else None
+        image_urls = [entry["image_url"] for entry in images_res.data]
 
         payload = {
             "id": row["id"],
@@ -317,14 +329,14 @@ async def get_complaint(
                 {"status": entry["status"], "created_at": entry["created_at"]}
                 for entry in history_res.data
             ],
-            "image_url": image_url,
+            "image_urls": image_urls,
             "duplicate_of_complaint_id": row["duplicate_of_complaint_id"],
         }
         logger.info(
-            "get_complaint success | complaint_id=%s history_len=%d has_image=%s",
+            "get_complaint success | complaint_id=%s history_len=%d num_images=%d",
             complaint_id,
             len(payload["status_history"]),
-            image_url is not None,
+            len(image_urls),
         )
         return payload
     except HTTPException:

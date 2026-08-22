@@ -16,20 +16,29 @@ _CONTENT_TYPE_TO_EXT = {
 
 
 async def upload_complaint_image(
-    data: bytes, complaint_id: str, content_type: str | None = None
+    data: bytes,
+    complaint_id: str,
+    content_type: str | None = None,
+    slot: int | None = None,
 ) -> str:
-    """Upload a complaint's evidence image to Supabase Storage and return its public URL.
+    """Upload one evidence image to Supabase Storage and return its public URL.
 
-    Object path follows docs/ARCHITECTURE_CITIZEN_FLOW.md: complaint-images bucket,
-    keyed by {year}/{month}/ at upload time.
+    This stays a single-image unit; multiple photos per complaint are fanned out
+    by the router with distinct slot numbers so object paths never collide.
+    Object path follows docs/ARCHITECTURE_CITIZEN_FLOW.md: complaint-images
+    bucket, keyed by {year}/{month}/ at upload time.
     """
     logger.info(
-        "upload_complaint_image called | size_bytes=%d complaint_id=%s", len(data), complaint_id
+        "upload_complaint_image called | size_bytes=%d complaint_id=%s slot=%s",
+        len(data),
+        complaint_id,
+        slot,
     )
     try:
         ext = _CONTENT_TYPE_TO_EXT.get(content_type or "", "jpg")
         now = datetime.now(timezone.utc)
-        object_path = f"{now.year}/{now.month:02d}/{complaint_id}.{ext}"
+        stem = complaint_id if slot is None else f"{complaint_id}-{slot}"
+        object_path = f"{now.year}/{now.month:02d}/{stem}.{ext}"
         file_options = {"content-type": content_type or "image/jpeg"}
 
         supabase.storage.from_(BUCKET_NAME).upload(object_path, data, file_options)
@@ -44,6 +53,9 @@ async def upload_complaint_image(
         return public_url
     except Exception:
         logger.exception(
-            "upload_complaint_image failed | size_bytes=%d complaint_id=%s", len(data), complaint_id
+            "upload_complaint_image failed | size_bytes=%d complaint_id=%s slot=%s",
+            len(data),
+            complaint_id,
+            slot,
         )
         raise

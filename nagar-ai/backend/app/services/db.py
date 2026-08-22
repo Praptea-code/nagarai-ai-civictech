@@ -49,18 +49,20 @@ def save_complaint(
     embedding: list[float] | None,
     status: str,
     duplicate_of_complaint_id: str | None = None,
-    image_url: str | None = None,
+    image_urls: list[str] | None = None,
 ) -> dict:
-    """Insert the complaints row plus optional image row and initial status-history row.
+    """Insert the complaints row, one complaint_images row per photo, and the initial
+    status-history row.
 
     Runs under the service-role client because the complaint_status_history RLS
     policy only permits admin inserts; the backend is the trusted write boundary
     and citizen_id comes from a verified JWT upstream. Returns the inserted row.
     """
+    urls = image_urls or []
     logger.info(
-        "save_complaint called | desc_len=%d has_image=%s has_embedding=%s status=%s",
+        "save_complaint called | desc_len=%d num_images=%d has_embedding=%s status=%s",
         len(description),
-        image_url is not None,
+        len(urls),
         embedding is not None,
         status,
     )
@@ -88,9 +90,9 @@ def save_complaint(
             .execute()
         )
         complaint = res.data[0]
-        if image_url:
+        for url in urls:
             supabase.table("complaint_images").insert(
-                {"complaint_id": complaint["id"], "image_url": image_url}
+                {"complaint_id": complaint["id"], "image_url": url}
             ).execute()
         supabase.table("complaint_status_history").insert(
             {
@@ -100,10 +102,10 @@ def save_complaint(
             }
         ).execute()
         logger.info(
-            "save_complaint success | complaint_id=%s status=%s has_image=%s",
+            "save_complaint success | complaint_id=%s status=%s num_images=%d",
             complaint["id"],
             complaint["status"],
-            bool(image_url),
+            len(urls),
         )
         return complaint
     except Exception:

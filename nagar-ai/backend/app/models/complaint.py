@@ -17,6 +17,7 @@ ComplaintCategory = Literal[
 # paths stay identical. Matches docs/API_CONTRACT.md and the client-side
 # checks in apps/citizen/app/submit/page.tsx.
 MAX_DESCRIPTION_LENGTH = 2000
+MAX_IMAGES = 5
 LATITUDE_MIN = -90.0
 LATITUDE_MAX = 90.0
 LONGITUDE_MIN = -180.0
