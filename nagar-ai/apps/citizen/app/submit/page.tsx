@@ -165,7 +165,7 @@ export default function SubmitPage() {
           Report an issue
         </h1>
         <p className="mt-1.5 text-sm leading-relaxed text-ink/55">
-          Describe the problem and where it is — your report goes straight to the municipality.
+          Tell us what&apos;s wrong and where it is.
         </p>
       </div>
 
