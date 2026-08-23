@@ -3,6 +3,7 @@
 __pycache__/
 node_modules/
 .venv/
+venv/
 logs/
 *.pyc
 .next/

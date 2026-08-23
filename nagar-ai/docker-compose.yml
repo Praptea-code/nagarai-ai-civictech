@@ -20,6 +20,5 @@ services:
       - /app/node_modules
     command: npm run dev
 
-  # admin service intentionally omitted — apps/admin/ belongs to Person 2.
-  # Coordinate service name and port with them before adding it here;
-  # don't add it unilaterally, this file is shared between both of you.
+  # Admin console lives inside the citizen app at /admin (single login,
+  # single port 3000). No separate admin service needed.

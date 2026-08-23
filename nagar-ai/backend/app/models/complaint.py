@@ -1,4 +1,5 @@
 from typing import Literal
+from uuid import UUID
 
 from pydantic import BaseModel, Field, field_validator
 
@@ -10,6 +11,18 @@ ComplaintCategory = Literal[
     "flooding",
     "drainage",
     "other",
+]
+
+ComplaintSeverity = Literal["low", "medium", "high", "critical"]
+
+ComplaintStatus = Literal[
+    "submitted",
+    "under_review",
+    "assigned",
+    "in_progress",
+    "resolved",
+    "rejected",
+    "duplicate",
 ]
 
 # Single source of truth for submission constraints, shared by the Pydantic
@@ -48,3 +61,23 @@ class ComplaintResponse(BaseModel):
     severity: str | None = None
     ai_summary: str | None = None
     ai_confidence: float | None = None
+
+
+class ComplaintUpdate(BaseModel):
+    """Admin mutation payload for PATCH /admin/complaints/{id}.
+
+    At least one field must be set; the router rejects empty bodies. `note` is
+    persisted to complaint_status_history (the audit trail), not the complaints
+    row, so every admin action stays attributable and timestamped.
+    """
+
+    status: ComplaintStatus | None = None
+    note: str | None = Field(default=None, max_length=MAX_DESCRIPTION_LENGTH)
+    department_id: UUID | None = None
+
+    @field_validator("note")
+    @classmethod
+    def note_not_blank(cls, value: str | None) -> str | None:
+        if value is not None and not value.strip():
+            raise ValueError("note must not be blank")
+        return value

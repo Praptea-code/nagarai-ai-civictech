@@ -5,6 +5,7 @@ import { useState } from "react";
 
 import { signIn } from "@/lib/auth";
 import { log } from "@/lib/logger";
+import { supabase } from "@/lib/supabase";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -26,7 +27,26 @@ export default function LoginPage() {
         return;
       }
       log("info", "login success", { userId: data.user?.id ?? null });
-      router.push("/submit");
+
+      // Single login for both roles: admins go to the console,
+      // citizens continue with the complaint flow.
+      const uid = data.user?.id;
+      let role: string | null = null;
+      if (uid) {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("role")
+          .eq("id", uid)
+          .single();
+        role = profile?.role ?? null;
+      }
+
+      if (role === "admin") {
+        log("info", "admin login, redirecting to console");
+        router.push("/admin");
+      } else {
+        router.push("/submit");
+      }
     } finally {
       setBusy(false);
     }

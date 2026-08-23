@@ -2,9 +2,27 @@
 
 import logging
 
+import httpx
+
 from supabase import Client, create_client
 
 from app.core.config import settings
+
+# Supabase sits behind Cloudflare, whose edge terminates reused HTTP/2
+# connections after a single response on some networks (observed from WSL2:
+# every second request died with httpx RemoteProtocolError ConnectionTerminated).
+# All three supabase libs hardcode http2=True when building their httpx clients,
+# so coerce every httpx.Client back to HTTP/1.1, which tolerates connection
+# reuse, until the libraries expose an option.
+_original_httpx_client_init = httpx.Client.__init__
+
+
+def _httpx_client_init_no_h2(self, *args, **kwargs):
+    kwargs["http2"] = False
+    _original_httpx_client_init(self, *args, **kwargs)
+
+
+httpx.Client.__init__ = _httpx_client_init_no_h2
 
 logger = logging.getLogger(__name__)
 

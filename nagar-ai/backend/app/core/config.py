@@ -8,7 +8,7 @@ class Settings(BaseSettings):
     HF_NLP_MODEL: str = "facebook/bart-large-mnli"
     EMBEDDING_MODEL: str = "sentence-transformers/all-MiniLM-L6-v2"
     LOG_LEVEL: str = "INFO"
-    CORS_ORIGINS: str = "http://localhost:3000"
+    CORS_ORIGINS: str = "http://localhost:3000,http://localhost:3001"
 
     class Config:
         env_file = ".env"
