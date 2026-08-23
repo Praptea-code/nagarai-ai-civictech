@@ -50,36 +50,27 @@ export default function NavBar() {
   const isActive = (href: string) =>
     pathname === href || pathname?.startsWith(`${href}/`) === true;
 
-  const brand = (
-    <Link href="/submit" aria-label="Nagar AI" className="flex shrink-0 items-center">
-      <span
-        aria-hidden="true"
-        className="flex h-8 w-16 items-center justify-center rounded-md border border-paper/40 text-[10px] font-medium tracking-[0.2em] text-paper/60"
-      >
-        LOGO
-      </span>
-    </Link>
-  );
-
   const mobileItemClass =
-    "rounded-lg px-3 py-2.5 text-sm transition-colors duration-150";
+    "w-full rounded-sm px-2 py-2 text-left text-sm transition-colors duration-150";
 
   return (
-    <header className="mt-4 flex justify-center px-3 sm:px-4">
-      <div className="w-full sm:w-fit">
-        <nav
-          aria-label="Main"
-          className="flex items-center justify-between rounded-full bg-ink px-4 py-2.5 shadow-sm sm:justify-center sm:gap-x-6 sm:px-6 sm:py-3"
-        >
-          <div className="flex items-center sm:hidden">{brand}</div>
-
+    <header className="bg-signal text-paper">
+      <nav className="mx-auto max-w-3xl px-4 py-3 sm:flex sm:flex-wrap sm:items-center sm:justify-between sm:gap-x-6 sm:gap-y-2">
+        {/* Mobile-only brand row with hamburger */}
+        <div className="flex items-center justify-between gap-4 sm:hidden">
+          <Link
+            href="/"
+            className="font-display text-lg font-bold text-white transition-colors duration-150 hover:text-paper/90"
+          >
+            Nagar AI
+          </Link>
           <button
             type="button"
             onClick={() => setMenuOpen((v) => !v)}
             aria-expanded={menuOpen}
             aria-controls="mobile-menu"
             aria-label={menuOpen ? "Close menu" : "Open menu"}
-            className="-mr-1 flex h-9 w-9 items-center justify-center rounded-full text-paper transition-colors duration-150 hover:bg-white/10 sm:hidden"
+            className="-mr-2 flex h-9 w-9 shrink-0 items-center justify-center rounded-sm text-paper transition-colors duration-150 hover:bg-white/10"
           >
             {menuOpen ? (
               <svg
@@ -89,7 +80,7 @@ export default function NavBar() {
                 stroke="currentColor"
                 strokeWidth="2"
                 strokeLinecap="round"
-                className="h-5 w-5"
+                className="h-6 w-6"
               >
                 <path d="M6 6l12 12M18 6L6 18" />
               </svg>
@@ -101,116 +92,118 @@ export default function NavBar() {
                 stroke="currentColor"
                 strokeWidth="2"
                 strokeLinecap="round"
-                className="h-5 w-5"
+                className="h-6 w-6"
               >
                 <path d="M4 7h16M4 12h16M4 17h16" />
               </svg>
             )}
           </button>
+        </div>
 
-          <div className="hidden items-center gap-x-6 sm:flex">
-            {brand}
+        <Link
+          href="/"
+          className="hidden font-display text-lg font-bold text-white transition-colors duration-150 hover:text-paper/90 sm:block"
+        >
+          Nagar AI
+        </Link>
 
-            <div className="flex items-center gap-5">
-              {NAV_LINKS.map((link) => (
+        <div className="hidden items-center gap-4 sm:flex">
+          {NAV_LINKS.map((link) => (
+            <Link
+              key={link.href}
+              href={link.href}
+              aria-current={isActive(link.href) ? "page" : undefined}
+              className={`text-sm transition-colors duration-150 ${
+                isActive(link.href)
+                  ? "font-medium text-white underline decoration-hazard decoration-2 underline-offset-[6px]"
+                  : "text-paper/80 hover:text-white"
+              }`}
+            >
+              {link.label}
+            </Link>
+          ))}
+        </div>
+
+        <div className="hidden items-center gap-3 sm:flex">
+          {hasSession ? (
+            <button
+              type="button"
+              onClick={handleLogout}
+              disabled={loggingOut}
+              className="rounded-sm border border-paper/50 px-2 py-1 text-sm text-paper transition-colors duration-150 hover:bg-white/10 disabled:opacity-50"
+            >
+              {loggingOut ? "Logging out..." : "Log out"}
+            </button>
+          ) : (
+            <>
+              <Link
+                href="/auth/login"
+                className="px-1 py-1 text-sm text-paper/80 transition-colors duration-150 hover:text-white"
+              >
+                Log in
+              </Link>
+              <Link
+                href="/auth/signup"
+                className="rounded-sm border border-paper/50 px-2 py-1 text-sm text-paper transition-colors duration-150 hover:bg-white/10"
+              >
+                Sign up
+              </Link>
+            </>
+          )}
+        </div>
+      </nav>
+
+      {menuOpen && (
+        <div id="mobile-menu" className="mx-auto max-w-3xl px-4 pb-4 sm:hidden">
+          <div className="flex flex-col items-start gap-1 pt-1">
+            {NAV_LINKS.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                onClick={() => setMenuOpen(false)}
+                aria-current={isActive(link.href) ? "page" : undefined}
+                className={`${mobileItemClass} ${
+                  isActive(link.href)
+                    ? "font-medium text-white underline decoration-hazard decoration-2 underline-offset-4"
+                    : "text-paper/80 hover:bg-white/10 hover:text-white"
+                }`}
+              >
+                {link.label}
+              </Link>
+            ))}
+
+            <div className="my-1 h-px w-full bg-white/10" />
+
+            {hasSession ? (
+              <button
+                type="button"
+                onClick={handleLogout}
+                disabled={loggingOut}
+                className={`${mobileItemClass} font-medium text-white hover:bg-white/10 disabled:opacity-50`}
+              >
+                {loggingOut ? "Logging out..." : "Log out"}
+              </button>
+            ) : (
+              <>
                 <Link
-                  key={link.href}
-                  href={link.href}
-                  aria-current={isActive(link.href) ? "page" : undefined}
-                  className={`whitespace-nowrap text-sm transition-colors duration-150 ${
-                    isActive(link.href)
-                      ? "font-medium text-white underline decoration-hazard decoration-2 underline-offset-[6px]"
-                      : "text-paper/80 hover:text-white"
-                  }`}
-                >
-                  {link.label}
-                </Link>
-              ))}
-            </div>
-
-            {/* Lighter inner capsule for auth actions */}
-            <div className="flex items-center gap-3 rounded-full bg-paper px-4 py-1.5">
-              {hasSession ? (
-                <button
-                  type="button"
-                  onClick={handleLogout}
-                  disabled={loggingOut}
-                  className="text-sm font-medium text-ink transition-colors duration-150 hover:text-ink/70 disabled:opacity-50"
-                >
-                  {loggingOut ? "Logging out..." : "Log out"}
-                </button>
-              ) : (
-                <>
-                  <Link
-                    href="/auth/login"
-                    className="text-sm text-ink transition-colors duration-150 hover:text-ink/70"
-                  >
-                    Log in
-                  </Link>
-                  <Link
-                    href="/auth/signup"
-                    className="text-sm font-semibold text-ink transition-colors duration-150 hover:text-ink/70"
-                  >
-                    Sign up
-                  </Link>
-                </>
-              )}
-            </div>
-          </div>
-        </nav>
-
-        {menuOpen && (
-          <div id="mobile-menu" className="mt-2 rounded-2xl bg-ink p-2 shadow-sm sm:hidden">
-            <div className="flex flex-col gap-1">
-              {NAV_LINKS.map((link) => (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  aria-current={isActive(link.href) ? "page" : undefined}
+                  href="/auth/login"
                   onClick={() => setMenuOpen(false)}
-                  className={`${mobileItemClass} ${
-                    isActive(link.href)
-                      ? "bg-white/10 font-medium text-white underline decoration-hazard decoration-2 underline-offset-4"
-                      : "text-paper/80 hover:bg-white/10 hover:text-white"
-                  }`}
+                  className={`${mobileItemClass} text-paper/80 hover:bg-white/10 hover:text-white`}
                 >
-                  {link.label}
+                  Log in
                 </Link>
-              ))}
-
-              <div className="my-1 border-t border-white/10" />
-
-              {hasSession ? (
-                <button
-                  type="button"
-                  onClick={handleLogout}
-                  disabled={loggingOut}
-                  className={`${mobileItemClass} text-left font-medium text-paper/90 hover:bg-white/10 disabled:opacity-50`}
+                <Link
+                  href="/auth/signup"
+                  onClick={() => setMenuOpen(false)}
+                  className={`${mobileItemClass} font-medium text-white hover:bg-white/10`}
                 >
-                  {loggingOut ? "Logging out..." : "Log out"}
-                </button>
-              ) : (
-                <>
-                  <Link
-                    href="/auth/login"
-                    onClick={() => setMenuOpen(false)}
-                    className={`${mobileItemClass} text-paper/80 hover:bg-white/10 hover:text-white`}
-                  >
-                    Log in
-                  </Link>
-                  <Link
-                    href="/auth/signup"
-                    onClick={() => setMenuOpen(false)}
-                    className={`${mobileItemClass} font-semibold text-paper/90 hover:bg-white/10`}
-                  >
-                    Sign up
-                  </Link>
-                </>
-              )}
-            </div>
+                  Sign up
+                </Link>
+              </>
+            )}
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </header>
   );
 }
