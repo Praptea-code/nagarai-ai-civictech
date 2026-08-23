@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
@@ -63,12 +64,14 @@ export default function NavBar() {
             aria-label="Nagar AI"
             className="flex shrink-0 items-center"
           >
-            <span
-              aria-hidden="true"
-              className="flex h-9 w-[4.5rem] items-center justify-center rounded-md border border-paper/40 text-[11px] font-medium tracking-[0.2em] text-paper/60"
-            >
-              LOGO
-            </span>
+            <Image
+              src="/nagar-ai-logo.png"
+              alt=""
+              width={36}
+              height={36}
+              priority
+              className="h-9 w-9"
+            />
           </Link>
           <button
             type="button"
@@ -111,12 +114,14 @@ export default function NavBar() {
           aria-label="Nagar AI"
           className="hidden shrink-0 items-center sm:flex"
         >
-          <span
-            aria-hidden="true"
-            className="flex h-9 w-[4.5rem] items-center justify-center rounded-md border border-paper/40 text-[11px] font-medium tracking-[0.2em] text-paper/60"
-          >
-            LOGO
-          </span>
+          <Image
+            src="/nagar-ai-logo.png"
+            alt=""
+            width={36}
+            height={36}
+            priority
+            className="h-9 w-9"
+          />
         </Link>
 
         <div className="hidden items-center gap-4 sm:flex">
