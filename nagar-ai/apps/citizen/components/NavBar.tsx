@@ -51,19 +51,12 @@ export default function NavBar() {
     pathname === href || pathname?.startsWith(`${href}/`) === true;
 
   const brand = (
-    <Link
-      href="/"
-      aria-label="Nagar AI"
-      className="flex shrink-0 items-center gap-2"
-    >
+    <Link href="/submit" aria-label="Nagar AI" className="flex shrink-0 items-center">
       <span
         aria-hidden="true"
-        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-signal font-display text-base font-bold leading-none text-paper"
+        className="flex h-8 w-16 items-center justify-center rounded-md border border-paper/40 text-[10px] font-medium tracking-[0.2em] text-paper/60"
       >
-        N
-      </span>
-      <span className="hidden font-display text-lg font-bold text-paper min-[420px]:inline">
-        Nagar AI
+        LOGO
       </span>
     </Link>
   );
