@@ -1,8 +1,9 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useId, useState } from "react";
 
+import CategorySelect from "@/components/CategorySelect";
 import { submitComplaint } from "@/lib/api";
 import { log } from "@/lib/logger";
 
@@ -11,18 +12,9 @@ const MAX_IMAGES = 5;
 const MAX_DESCRIPTION_LENGTH = 2000;
 const ALLOWED_IMAGE_TYPES = new Set(["image/jpeg", "image/png"]);
 
-const CATEGORY_OPTIONS = [
-  { label: "Pothole", value: "pothole" },
-  { label: "Garbage", value: "garbage" },
-  { label: "Water Leakage", value: "water_leakage" },
-  { label: "Streetlight", value: "streetlight" },
-  { label: "Flooding", value: "flooding" },
-  { label: "Drainage", value: "drainage" },
-  { label: "Other", value: "other" },
-] as const;
-
 export default function SubmitPage() {
   const router = useRouter();
+  const categoryId = useId();
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState("");
   const [ward, setWard] = useState("");
@@ -186,24 +178,12 @@ export default function SubmitPage() {
           />
         </label>
 
-        <label className={labelClass}>
-          Category <span className="text-hazard">*</span>
-          <select
-            required
-            value={category}
-            onChange={(e) => setCategory(e.target.value)}
-            className={inputClass}
-          >
-            <option value="" disabled>
-              Select a category...
-            </option>
-            {CATEGORY_OPTIONS.map((opt) => (
-              <option key={opt.value} value={opt.value}>
-                {opt.label}
-              </option>
-            ))}
-          </select>
-        </label>
+        <div>
+          <span id={categoryId} className={labelClass}>
+            Category <span className="text-hazard">*</span>
+          </span>
+          <CategorySelect labelId={categoryId} value={category} onChange={setCategory} />
+        </div>
 
         <fieldset>
           <legend className={labelClass}>
