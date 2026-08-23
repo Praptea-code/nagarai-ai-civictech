@@ -270,7 +270,7 @@ export default function SubmitPage() {
             Photos (optional, up to {MAX_IMAGES}){" "}
             <span className="text-xs font-normal text-ink/50">JPEG or PNG, max 8MB each</span>
           </legend>
-          <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <div className="mt-3 grid grid-cols-2 gap-3">
             <label className={dropzoneClass}>
               <svg
                 aria-hidden="true"
