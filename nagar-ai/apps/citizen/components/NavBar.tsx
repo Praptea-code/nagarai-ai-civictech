@@ -60,9 +60,15 @@ export default function NavBar() {
         <div className="flex items-center justify-between gap-4 sm:hidden">
           <Link
             href="/"
-            className="font-display text-lg font-bold text-white transition-colors duration-150 hover:text-paper/90"
+            aria-label="Nagar AI"
+            className="flex shrink-0 items-center"
           >
-            Nagar AI
+            <span
+              aria-hidden="true"
+              className="flex h-9 w-[4.5rem] items-center justify-center rounded-md border border-paper/40 text-[11px] font-medium tracking-[0.2em] text-paper/60"
+            >
+              LOGO
+            </span>
           </Link>
           <button
             type="button"
@@ -102,9 +108,15 @@ export default function NavBar() {
 
         <Link
           href="/"
-          className="hidden font-display text-lg font-bold text-white transition-colors duration-150 hover:text-paper/90 sm:block"
+          aria-label="Nagar AI"
+          className="hidden shrink-0 items-center sm:flex"
         >
-          Nagar AI
+          <span
+            aria-hidden="true"
+            className="flex h-9 w-[4.5rem] items-center justify-center rounded-md border border-paper/40 text-[11px] font-medium tracking-[0.2em] text-paper/60"
+          >
+            LOGO
+          </span>
         </Link>
 
         <div className="hidden items-center gap-4 sm:flex">
