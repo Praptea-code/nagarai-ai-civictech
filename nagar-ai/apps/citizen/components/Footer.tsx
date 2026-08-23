@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 
 const FOOTER_LINKS = [
@@ -12,12 +13,13 @@ export default function Footer() {
       <div className="mx-auto max-w-3xl px-4 py-8 md:py-10">
         <div className="flex flex-col gap-8 md:flex-row md:items-start md:justify-between">
           <div className="max-w-sm">
-            <span
-              aria-hidden="true"
-              className="flex h-9 w-[4.5rem] items-center justify-center rounded-md border border-rule text-[11px] font-medium tracking-[0.2em] text-ink/40"
-            >
-              LOGO
-            </span>
+            <Image
+              src="/nagar-ai-logo.png"
+              alt=""
+              width={32}
+              height={32}
+              className="h-8 w-8"
+            />
             <p className="mt-3 text-sm leading-relaxed text-ink/70">
               AI-powered civic issue reporting and resolution system for municipalities.
             </p>
