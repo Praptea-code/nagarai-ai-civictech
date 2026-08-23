@@ -144,15 +144,36 @@ export default function SubmitPage() {
     }
   }
 
+  const labelClass = "block text-sm font-medium text-ink";
+
   const inputClass =
-    "mt-1 w-full rounded border border-rule bg-white p-2 focus:border-signal focus:outline-none focus:ring-1 focus:ring-signal";
+    "mt-1.5 w-full rounded-lg border border-rule bg-paper/60 px-3 py-2.5 text-sm text-ink placeholder:text-ink/40 transition-colors duration-150 focus:border-signal focus:bg-white focus:outline-none focus:ring-2 focus:ring-signal/30";
+
+  const coordInputClass = `mt-1.5 w-full rounded-lg border bg-paper/60 px-3 py-2 font-mono text-sm text-ink placeholder:text-ink/40 transition-colors duration-150 ${
+    geoStatus?.startsWith("Location captured")
+      ? "border-rule bg-paper text-ink/70"
+      : "border-rule"
+  } focus:border-signal focus:bg-white focus:outline-none focus:ring-2 focus:ring-signal/30`;
+
+  const dropzoneClass =
+    "flex cursor-pointer flex-col items-center justify-center gap-0.5 rounded-lg border border-dashed border-rule bg-paper/50 px-4 py-6 text-center transition-colors duration-150 hover:border-signal hover:bg-signal/5 focus-within:border-signal focus-within:bg-signal/5 focus-within:ring-2 focus-within:ring-signal/25";
 
   return (
-    <main className="mx-auto w-full max-w-2xl space-y-6">
-      <h1 className="font-display text-xl font-bold text-ink">Report an issue</h1>
+    <main className="mx-auto w-full max-w-2xl space-y-7">
+      <div>
+        <h1 className="font-display text-2xl font-bold tracking-tight text-ink sm:text-3xl">
+          Report an issue
+        </h1>
+        <p className="mt-1.5 text-sm leading-relaxed text-ink/55">
+          Describe the problem and where it is — your report goes straight to the municipality.
+        </p>
+      </div>
 
-      <form onSubmit={handleSubmit} className="w-full space-y-4 rounded-md border border-rule bg-white p-6 shadow-sm">
-        <label className="block text-sm font-medium">
+      <form
+        onSubmit={handleSubmit}
+        className="w-full space-y-6 rounded-xl border border-rule bg-white p-6 shadow-sm sm:p-8"
+      >
+        <label className={labelClass}>
           Description <span className="text-hazard">*</span>
           <textarea
             required
@@ -161,11 +182,11 @@ export default function SubmitPage() {
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             placeholder="Describe the problem and where it is..."
-            className={inputClass}
+            className={`${inputClass} resize-y`}
           />
         </label>
 
-        <label className="block text-sm font-medium">
+        <label className={labelClass}>
           Category <span className="text-hazard">*</span>
           <select
             required
@@ -185,12 +206,15 @@ export default function SubmitPage() {
         </label>
 
         <fieldset>
-          <legend className="text-sm font-medium">
+          <legend className={labelClass}>
             Location <span className="text-hazard">*</span>
           </legend>
-          <p className="mt-1 text-xs text-ink/60">{geoStatus ?? "Requesting your location..."}</p>
-          <div className="mt-2 grid grid-cols-2 gap-2">
-            <label className="text-xs text-ink/70">`n              Latitude
+          <p className="mt-1 text-xs font-normal leading-relaxed text-ink/50">
+            {geoStatus ?? "Requesting your location..."}
+          </p>
+          <div className="mt-2 grid grid-cols-2 gap-3">
+            <label className="block text-xs font-medium text-ink/70">
+              Latitude
               <input
                 type="number"
                 step="any"
@@ -198,11 +222,11 @@ export default function SubmitPage() {
                 value={latitude}
                 onChange={(e) => setLatitude(e.target.value)}
                 placeholder="27.7172"
-                className={`mt-1 w-full rounded border bg-white p-2 font-mono text-sm ${geoStatus?.startsWith("Location captured") ? "border-rule bg-paper" : "border-rule"} focus:border-signal focus:outline-none focus:ring-1 focus:ring-signal`}
+                className={coordInputClass}
                 readOnly={geoStatus?.startsWith("Location captured")}
               />
             </label>
-            <label className="text-xs text-ink/70">
+            <label className="block text-xs font-medium text-ink/70">
               Longitude
               <input
                 type="number"
@@ -211,15 +235,15 @@ export default function SubmitPage() {
                 value={longitude}
                 onChange={(e) => setLongitude(e.target.value)}
                 placeholder="85.3240"
-                className={`mt-1 w-full rounded border bg-white p-2 font-mono text-sm ${geoStatus?.startsWith("Location captured") ? "border-rule bg-paper" : "border-rule"} focus:border-signal focus:outline-none focus:ring-1 focus:ring-signal`}
+                className={coordInputClass}
                 readOnly={geoStatus?.startsWith("Location captured")}
               />
             </label>
           </div>
         </fieldset>
 
-        <div className="grid grid-cols-2 gap-2">
-          <label className="block text-sm font-medium">
+        <div className="grid grid-cols-2 gap-3">
+          <label className={labelClass}>
             Ward
             <input
               type="text"
@@ -229,7 +253,7 @@ export default function SubmitPage() {
               className={inputClass}
             />
           </label>
-          <label className="block text-sm font-medium">
+          <label className={labelClass}>
             Municipality
             <input
               type="text"
@@ -241,13 +265,28 @@ export default function SubmitPage() {
           </label>
         </div>
 
-        <fieldset>
-          <legend className="text-sm font-medium">
-            Photos (optional, up to {MAX_IMAGES}) <span className="text-xs font-normal text-gray-500">JPEG or PNG, max 8MB each</span>
+        <fieldset className="border-t border-rule pt-6">
+          <legend className={labelClass}>
+            Photos (optional, up to {MAX_IMAGES}){" "}
+            <span className="text-xs font-normal text-ink/50">JPEG or PNG, max 8MB each</span>
           </legend>
-          <div className="mt-1 grid grid-cols-2 gap-2">
-            <label className="block text-sm">
-              <span className="text-ink/70">Choose from gallery</span>
+          <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <label className={dropzoneClass}>
+              <svg
+                aria-hidden="true"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="mb-1 h-6 w-6 text-signal"
+              >
+                <rect x="3" y="3" width="18" height="18" rx="2" />
+                <circle cx="8.5" cy="8.5" r="1.5" />
+                <path d="m21 15-5-5L5 21" />
+              </svg>
+              <span className="text-sm font-medium text-signal">Choose from gallery</span>
               <input
                 type="file"
                 accept="image/jpeg,image/png"
@@ -256,13 +295,26 @@ export default function SubmitPage() {
                   addFiles(e.target.files);
                   e.target.value = "";
                 }}
-                className="mt-1 block w-full text-sm text-ink/70 file:mr-3 file:rounded file:border-0 file:bg-signal/10 file:p-2 file:text-sm file:text-signal"
+                className="sr-only"
               />
             </label>
-            <label className="block text-sm">
-              <span className="text-ink/70">Take photo</span>
+            <label className={dropzoneClass}>
               {/* capture="environment" opens the rear camera directly on mobile;
                   each capture appends to the same list, so users can tap it repeatedly. */}
+              <svg
+                aria-hidden="true"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="mb-1 h-6 w-6 text-moss"
+              >
+                <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3Z" />
+                <circle cx="12" cy="13" r="3" />
+              </svg>
+              <span className="text-sm font-medium text-moss">Take photo</span>
               <input
                 type="file"
                 accept="image/*"
@@ -271,26 +323,26 @@ export default function SubmitPage() {
                   addFiles(e.target.files);
                   e.target.value = "";
                 }}
-                className="mt-1 block w-full text-sm text-ink/70 file:mr-3 file:rounded file:border-0 file:bg-moss/10 file:p-2 file:text-sm file:text-moss"
+                className="sr-only"
               />
             </label>
           </div>
 
           {previews.length > 0 && (
-            <ul className="mt-2 flex flex-wrap gap-2">
+            <ul className="mt-4 flex flex-wrap gap-3">
               {previews.map((preview, index) => (
                 <li key={`${preview.file.name}-${index}`} className="relative">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={preview.url}
                     alt={`Photo ${index + 1}`}
-                    className="h-20 w-20 rounded border border-rule object-cover"
+                    className="h-20 w-20 rounded-lg border border-rule object-cover shadow-sm"
                   />
                   <button
                     type="button"
                     onClick={() => removeImage(index)}
                     aria-label={`Remove photo ${index + 1}`}
-                    className="absolute -right-2 -top-2 h-6 w-6 rounded-full bg-red-600 text-sm leading-none text-white"
+                    className="absolute -right-2 -top-2 flex h-6 w-6 items-center justify-center rounded-full bg-red-600 text-sm leading-none text-white shadow-sm transition-colors duration-150 hover:bg-red-700"
                   >
                     ×
                   </button>
@@ -301,13 +353,13 @@ export default function SubmitPage() {
         </fieldset>
 
         {imageError && (
-          <p role="alert" className="rounded bg-red-50 p-2 text-sm text-red-600">
+          <p role="alert" className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">
             {imageError}
           </p>
         )}
 
         {formError && (
-          <p role="alert" className="rounded bg-red-50 p-2 text-sm text-red-600">
+          <p role="alert" className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">
             {formError}
           </p>
         )}
@@ -315,7 +367,7 @@ export default function SubmitPage() {
         <button
           type="submit"
           disabled={submitting}
-          className="w-full rounded bg-signal p-2 font-medium text-white transition-colors duration-150 hover:bg-signal-dark disabled:opacity-50"
+          className="w-full rounded-lg bg-signal px-4 py-3 text-sm font-semibold tracking-wide text-white transition-colors duration-150 hover:bg-signal-dark disabled:opacity-50"
         >
           {submitting ? "Submitting..." : "Submit report"}
         </button>
