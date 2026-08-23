@@ -267,7 +267,7 @@ export default function SubmitPage() {
 
         <fieldset className="border-t border-rule pt-6">
           <legend className={labelClass}>
-            Photos (optional, up to {MAX_IMAGES}){" "}
+            Photos (optional){" "}
             <span className="text-xs font-normal text-ink/50">JPEG or PNG, max 8MB each</span>
           </legend>
           <div className="mt-3 grid grid-cols-2 gap-3">
