@@ -104,51 +104,51 @@ cosine in Python (rejected â€” defeats pgvector/indexing, won't scale).
 (sentence-transformers added), `nagar_ai_schema.sql` (+1 function â€” must be applied to
 the live Supabase project before dedup works end to end).
 
-### 2026-08-22 — JWT validation delegated to Supabase Auth (GoTrue), not local decode
+### 2026-08-22 ï¿½ JWT validation delegated to Supabase Auth (GoTrue), not local decode
 **Decision:** `require_citizen()` in the citizen router validates the
 `Authorization: Bearer` token by calling `supabase.auth.get_user(token)` (offloaded to a
 worker thread). Missing/malformed header and invalid/expired tokens both yield 401 with
 `WWW-Authenticate: Bearer`; ownership failures later yield 403 per the contract.
 **Context:** supabase-py has no offline verify helper, and local PyJWT verification would
-need either the shared HS256 secret or JWKS support — neither available in `.env`.
+need either the shared HS256 secret or JWKS support ï¿½ neither available in `.env`.
 GoTrue already performs authoritative signature, expiry and revocation checks.
-**Alternatives considered:** Local PyJWT + JWT secret env var (rejected — new secret to
-distribute/rotate, duplicates GoTrue logic); decoding without verification (rejected —
+**Alternatives considered:** Local PyJWT + JWT secret env var (rejected ï¿½ new secret to
+distribute/rotate, duplicates GoTrue logic); decoding without verification (rejected ï¿½
 insecure).
 **Impact:** `backend/app/routers/citizen.py`. One extra HTTP round trip per request
 (~100-200ms); acceptable at current scale.
 
-### 2026-08-22 — RLS-scoped reads via anon-key client; service-role only for trusted writes
+### 2026-08-22 ï¿½ RLS-scoped reads via anon-key client; service-role only for trusted writes
 **Decision:** List/get queries run through a fresh per-request client built from
 `SUPABASE_ANON_KEY` with the citizen's JWT set via `postgrest.auth()`, so Postgres RLS
 actually scopes rows. Writes in the submission pipeline (`save_complaint`) use the
 service-role client. In `get_complaint`, when the RLS-scoped fetch misses, one existence
 probe under the trusted client distinguishes 403 (exists but foreign) from 404.
 **Context:** The status-history insert policy is admin-only by schema, so a citizen-JWT
-write path can never persist the initial history row — the backend is therefore the
+write path can never persist the initial history row ï¿½ the backend is therefore the
 trusted write boundary and takes `citizen_id` exclusively from the verified JWT, never
 from form data. A fresh client per request is required because supabase-py's
 `postgrest.auth()` mutates shared header state and is unsafe across concurrent requests.
 **Alternatives considered:** Service-role reads with manual citizen_id filtering
-(rejected for list/get — task requires RLS to genuinely apply); changing RLS so citizens
-may insert history rows (rejected — weakens admin-only audit trail invariant).
+(rejected for list/get ï¿½ task requires RLS to genuinely apply); changing RLS so citizens
+may insert history rows (rejected ï¿½ weakens admin-only audit trail invariant).
 **Impact:** `backend/app/core/config.py` (+SUPABASE_ANON_KEY), backend `.env` (anon key
 added locally), `backend/app/services/db.py` (citizen_client factory),
 `backend/app/routers/citizen.py`. Existence probe reveals whether a complaint id exists
 to non-owners; ids are UUIDs (unguessable) so this leaks nothing practical.
 
-### 2026-08-22 — CORS middleware for the citizen SPA origin
+### 2026-08-22 ï¿½ CORS middleware for the citizen SPA origin
 **Decision:** `main.py` adds FastAPI `CORSMiddleware` allowing GET/POST with
 Authorization/Content-Type headers from origins listed in the new `CORS_ORIGINS`
-setting (comma-separated, default `http://localhost:3000`). No credentials mode —
+setting (comma-separated, default `http://localhost:3000`). No credentials mode ï¿½
 auth is bearer tokens in a header, never cookies.
 **Context:** The first real browser test of the submission flow (headless Edge against
 the live backend) exposed that every POST from the SPA died at preflight:
 `OPTIONS /api/v1/complaints -> 405`, so the browser silently blocked the request. All
 earlier backend verification used non-browser clients (httpx), which skip CORS entirely.
 **Alternatives considered:** Proxying API calls through Next.js rewrites to keep
-everything same-origin (rejected for now — extra moving part; revisit for production);
-allow_origins=["*"] (rejected — sloppy default even with token auth).
+everything same-origin (rejected for now ï¿½ extra moving part; revisit for production);
+allow_origins=["*"] (rejected ï¿½ sloppy default even with token auth).
 **Impact:** `backend/app/main.py`, `backend/app/core/config.py`. Production must set
 CORS_ORIGINS to the deployed citizen origin(s).
 
@@ -205,3 +205,49 @@ the whole request with 422 rather than silently dropping it.
 (per-object slot suffix), `backend/app/services/db.py`, `backend/app/routers/citizen.py`,
 `apps/citizen/lib/api.ts`, submit form, tracker detail page. Old complaints keep their
 single row and are served as a one-element array.
+
+### 2026-08-24 - Translate-and-retry for low-confidence severity (Nepali support)
+**Decision:** When the zero-shot severity score lands under SEVERITY_CONFIDENCE_FLOOR,
+retry once through a Nepali->English translation path: Latin-script text is
+transliterated to Devanagari with `indic-transliteration` (ITRANS), then translated with
+`facebook/nllb-200-distilled-600M`; keep whichever reading (original vs translated) has
+the higher confidence. If still under the floor, behaviour is unchanged (severity=null).
+Citizen UI shows an "AI triage pending" chip where it previously hid null severity.
+**Context:** bart-large-mnli is English-trained; romanized-Nepali complaints ("nitya le
+dillibazar ko pul choryo") scored 0.49 -> null. The same text through translate+retry
+scores 0.97 high.
+**Alternatives considered:** Helsinki opus-mt-ne-en (does not exist publicly); ai4bharat
+XlitEngine transliterator (rejected - depends on fairseq, which cannot import on Python
+3.12); multilingual zero-shot model swap (rejected - slower, weaker Nepali coverage than
+NLLB, and would re-tune every threshold); lowering the confidence floor (rejected -
+admits guesses by design decision 2026-08-22).
+**Impact:** `backend/app/services/translation.py` (new), `backend/app/services/nlp.py`
+(_classify_once helper + retry), `backend/requirements.txt` (+indic-transliteration),
+`apps/citizen/app/(site)/my-complaints/page.tsx`. No API contract change - 201 response
+shape untouched, severity stays nullable. First rescue request loads NLLB (~2.4GB,
+cached afterwards).
+
+### 2026-08-24 - Critical escalation on harm evidence; unparseable input defaults to low
+**Decision:** Three changes to severity classification. (1) If the text explicitly mentions
+concrete harm - accidents, injuries, deaths (English, romanized Nepali, or Devanagari) -
+a medium/high model reading escalates to critical via `_CRITICAL_EVIDENCE_RE`. (2) Text
+still under the confidence floor after the translation retry defaults to severity="low"
+instead of null. (3) A `_looks_like_language` heuristic gate (distinct-letter count,
+vowel ratio, repeated-character runs) forces severity="low" for keyboard-mash input
+regardless of model confidence, and skips the translation rescue for it.
+**Context:** Zero-shot NLI anchors on hazard type and ignores past casualties:
+"pothole...3 major accidents because of it" read high @0.99 with critical @0.005, and
+re-wording the critical hypothesis moved it to only 0.066 - unusable. Deterministic
+keyword escalation is transparent and tunable. The null default confused citizens whose
+reports showed no severity at all ("vhj" -> nothing rendered). Noise cannot simply be
+floored either: "mmmmmmmmmookoioko" scored 0.5105 and "a" scored 0.53 - keyboard mash
+hovers right at the 0.5 boundary, so a deterministic language gate is required on every
+path, not just under-floor ones.
+**Alternatives considered:** Reworded critical hypotheses (tested 3 variants - model
+ignores them); LLM-based severity (no API budget); dictionary wordlist validation
+(no bundled dictionary, brittle for romanized Nepali); leaving null for admin triage
+(rejected per product call that every report should show something).
+**Impact:** `backend/app/services/nlp.py`, `backend/app/services/translation.py`
+(public `has_devanagari()` helper). Escalation applies to medium/high only (a
+genuinely-low report mentioning an accident stays low). The admin `severity=none` filter
+becomes a legacy queue for old rows. Old null rows keep their value.

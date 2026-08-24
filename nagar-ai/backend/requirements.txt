@@ -11,3 +11,6 @@ pydantic-settings
 transformers
 torch
 sentence-transformers
+
+# Latin->Devanagari transliteration feeding the severity rescue path (nlp.py).
+indic-transliteration

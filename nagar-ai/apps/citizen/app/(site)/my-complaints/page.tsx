@@ -62,8 +62,10 @@ export default function MyComplaintsPage() {
               </div>
               <p className="mt-1 line-clamp-2 text-sm text-ink/70">{item.description}</p>
               <div className="mt-2 flex items-center gap-2 text-xs text-ink/60">
-                {item.severity && (
+                {item.severity ? (
                   <span className="rounded-sm bg-paper px-1.5 py-0.5 font-mono">Severity: {item.severity}</span>
+                ) : (
+                  <span className="rounded-sm bg-paper px-1.5 py-0.5 font-mono">AI triage pending</span>
                 )}
                 {item.department && <span>{item.department}</span>}
                 <span>{formatDate(item.created_at)}</span>
