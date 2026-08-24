@@ -21,6 +21,29 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=<anon-key>       # safe for the client, RLS protec
 NEXT_PUBLIC_API_BASE_URL=http://localhost:8000/api/v1
 ```
 
+## Root `.env` (docker compose build args — never commit this file)
+
+A third env file must exist at the project root, next to `docker-compose.yml`,
+**before** running `docker compose up --build`. Copy the template:
+
+```bash
+cp .env.example .env    # from the nagar-ai/ root, then fill in real values
+```
+
+The citizen image is a production Next.js build (`npm run build`), and
+`NEXT_PUBLIC_*` variables are inlined into the client bundle at **build time**,
+not runtime. Compose therefore reads these two values from this file and passes
+them to `docker build` as build args:
+
+```
+NEXT_PUBLIC_SUPABASE_URL=https://<project>.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=<anon-key>
+```
+
+These are the same public client-side values as in `apps/citizen/.env.local`.
+They are safe for the browser (RLS protects the data), but if this file is
+missing at image build time every Supabase call in the built app fails.
+
 ## Local run
 
 Backend:
@@ -41,16 +64,20 @@ npm run dev
 
 ## Local run (Docker)
 
-Requires Docker and Docker Compose. `.env` (backend) and `.env.local` (citizen) still
-need to exist locally exactly as described above — Compose reads them via `env_file`,
-they are never baked into the image, and they're still git-ignored.
+Requires Docker and Docker Compose. Three local files are needed, all git-ignored:
+- `backend/.env` — read by Compose via `env_file`; never baked into the image.
+- `apps/citizen/.env.local` — not used by Compose; only needed for `npm run dev`.
+- `.env` (project root) — **required**: supplies the citizen production build
+  args (see section above).
 
 ```bash
 docker compose up --build
 ```
 
-Backend: http://localhost:8000
-Citizen app: http://localhost:3000
+Citizen app (also serves /admin): http://localhost:8080 — the only published
+port. The backend is not exposed to the host; API calls go to
+http://localhost:8080/api/v1, which next.config.mjs proxies to the backend
+container.
 
 Rebuild after changing `requirements.txt` or `package.json`:
 ```bash

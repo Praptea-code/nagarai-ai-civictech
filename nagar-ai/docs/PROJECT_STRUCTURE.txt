@@ -60,6 +60,8 @@ nagar-ai/
 │   ├── TASKS_PERSON1_CITIZEN.md
 │   └── nagar_ai_schema.sql        # moved here for versioning
 ├── scripts/                       # dev scripts (e.g., seed, test)
-├── docker-compose.yml             # local dev: backend + citizen services
+├── .env                           # root compose env → citizen image build args (never commit)
+├── .env.example                   # template for the above (committed)
+├── docker-compose.yml             # local run: backend + citizen (production build) services
 ├── .gitignore
 └── README.md
