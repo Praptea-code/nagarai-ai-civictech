@@ -7,6 +7,7 @@ Local bare-metal dev does not need this script — models lazy-load on first use
 """
 
 import os
+import sys
 
 HF_NLP_MODEL = os.environ.get("HF_NLP_MODEL", "facebook/bart-large-mnli")
 EMBEDDING_MODEL = os.environ.get(
@@ -38,3 +39,9 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+    # With exec-form ENTRYPOINT + CMD, Docker passes the server command (CMD)
+    # to this script as argv. Replace this process with it via execvp so
+    # uvicorn inherits PID 1 signal handling; without this the script exits
+    # after prefetching and the container never serves any traffic.
+    if len(sys.argv) > 1:
+        os.execvp(sys.argv[1], sys.argv[1:])
