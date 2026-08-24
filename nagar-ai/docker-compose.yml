@@ -1,24 +1,46 @@
+# One-command run for contributors:
+#   1. cp .env.example .env            (fill in the Supabase values)
+#   2. cp backend/.env.example backend/.env   (same Supabase keys + service role)
+#   3. docker compose up --build
+#   4. open http://localhost:8080
+#
+# The citizen app (which also serves /admin) is the ONLY published port. Its
+# next.config.mjs rewrites same-origin /api/v1/* to BACKEND_ORIGIN, so the
+# browser never talks cross-origin and no CORS setup is needed.
+
 services:
   backend:
     build: ./backend
-    ports:
-      - "8000:8000"
     env_file:
       - ./backend/.env
+    environment:
+      # Inside the compose network the frontend reaches us as "backend".
+      CORS_ORIGINS: "http://localhost:8080"
     volumes:
-      - ./backend:/app
-    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+      # ML models (~4GB) survive container rebuilds after the first boot.
+      - hf-cache:/root/.cache/huggingface
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/docs', timeout=5)"]
+      interval: 15s
+      timeout: 10s
+      retries: 20
+      start_period: 30s
 
   citizen:
-    build: ./apps/citizen
+    build:
+      context: ./apps/citizen
+      args:
+        NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL}
+        NEXT_PUBLIC_SUPABASE_ANON_KEY: ${NEXT_PUBLIC_SUPABASE_ANON_KEY}
+    environment:
+      # Resolved inside the docker network by next.config.mjs rewrites.
+      BACKEND_ORIGIN: http://backend:8000
     ports:
-      - "3000:3000"
-    env_file:
-      - ./apps/citizen/.env.local
-    volumes:
-      - ./apps/citizen:/app
-      - /app/node_modules
-    command: npm run dev
+      - "8080:3000"
+    restart: unless-stopped
+    depends_on:
+      - backend
 
-  # Admin console lives inside the citizen app at /admin (single login,
-  # single port 3000). No separate admin service needed.
+volumes:
+  hf-cache:
